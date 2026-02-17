@@ -331,71 +331,9 @@
         }
     </style>
     <!-- FIREBASE & GOOGLE LOGIN ENTEGRASYONU -->
-    <script type="module">
-        // Firebase kütüphanelerini CDN üzerinden çekiyoruz
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
-        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-
-        // -----------------------------------------------------------------------
-        // BURAYI DOLDUR: Firebase Konsolundan alacağın yapılandırma kodları
-        // -----------------------------------------------------------------------
-        const firebaseConfig = {
-            apiKey: "AIzaSyA_BN7C4YdaDBWfnqNTdqM2fv89pNY3PRs",
-  authDomain: "kpss-b34e3.firebaseapp.com",
-  projectId: "kpss-b34e3",
-  storageBucket: "kpss-b34e3.firebasestorage.app",
-  messagingSenderId: "858677856177",
-  appId: "1:858677856177:web:ba1eaffdd4c19d3e1b5f90",
-  measurementId: "G-8GPTMZ73HX"
-        };
-        // -----------------------------------------------------------------------
-
-        let auth, provider;
-
-        // Config doluysa Firebase'i başlat
-        if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "BURAYA_YAPISTIR") {
-            const app = initializeApp(firebaseConfig);
-            auth = getAuth(app);
-            provider = new GoogleAuthProvider();
-
-            // Kullanıcı durumunu dinle (Giriş yaptı mı?)
-            onAuthStateChanged(auth, (user) => {
-                const btnText = document.getElementById('login-btn-text');
-                if (user && btnText) {
-                    btnText.innerText = "Çıkış (" + user.displayName.split(' ')[0] + ")";
-                    localStorage.setItem('kpss_user_name', user.displayName);
-                    
-                    // Eğer bu oturumda henüz hoş geldin ekranı gösterilmediyse göster
-                    if (!sessionStorage.getItem('welcome_shown')) {
-                        window.showWelcomeScreen(user);
-                        sessionStorage.setItem('welcome_shown', 'true');
-                    }
-                } else if (btnText) {
-                    btnText.innerText = "Google Giriş";
-                }
-            });
-        }
-
-        // Global fonksiyon (HTML butonundan çağrılabilmesi için)
-        window.handleGoogleLogin = async () => {
-            if (!auth) {
-                alert("Lütfen kodun içindeki 'firebaseConfig' bölümünü kendi bilgilerinizle doldurun.");
-                return;
-            }
-            if (auth.currentUser) {
-                await signOut(auth);
-                location.reload();
-            } else {
-                try {
-                    await signInWithPopup(auth, provider);
-                    location.reload();
-                } catch (error) {
-                    alert("Giriş hatası: " + error.message);
-                }
-            }
-        };
-    </script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
@@ -1514,6 +1452,117 @@
                     overlay.classList.remove('opacity-0');
                 }, 1000);
             }, 2500);
+        };
+
+        // -----------------------------------------------------------------------
+        // FIREBASE ENTEGRASYONU (VERİ TABANI & GİRİŞ)
+        // -----------------------------------------------------------------------
+        const firebaseConfig = {
+            apiKey: "AIzaSyA_BN7C4YdaDBWfnqNTdqM2fv89pNY3PRs",
+            authDomain: "kpss-b34e3.firebaseapp.com",
+            projectId: "kpss-b34e3",
+            storageBucket: "kpss-b34e3.firebasestorage.app",
+            messagingSenderId: "858677856177",
+            appId: "1:858677856177:web:ba1eaffdd4c19d3e1b5f90",
+            measurementId: "G-8GPTMZ73HX"
+        };
+
+        let auth, db, provider;
+
+        // Firebase Başlatma
+        if (typeof firebase !== 'undefined') {
+            firebase.initializeApp(firebaseConfig);
+            auth = firebase.auth();
+            db = firebase.firestore();
+            provider = new firebase.auth.GoogleAuthProvider();
+
+            // Kullanıcı Durumunu Dinle
+            auth.onAuthStateChanged(async (user) => {
+                const btnText = document.getElementById('login-btn-text');
+                if (user) {
+                    if(btnText) btnText.innerText = "Çıkış (" + user.displayName.split(' ')[0] + ")";
+                    localStorage.setItem('kpss_user_name', user.displayName);
+                    
+                    // Verileri Buluttan Çek
+                    await loadUserData(user);
+
+                    // Hoş Geldin Ekranı
+                    if (!sessionStorage.getItem('welcome_shown')) {
+                        window.showWelcomeScreen(user);
+                        sessionStorage.setItem('welcome_shown', 'true');
+                    }
+                } else {
+                    if(btnText) btnText.innerText = "Google Giriş";
+                }
+            });
+        }
+
+        // Veri Yükleme (Firestore -> Site)
+        async function loadUserData(user) {
+            if (!db) return;
+            try {
+                const doc = await db.collection('users').doc(user.uid).get();
+                if (doc.exists) {
+                    const data = doc.data();
+                    if(data.completedLessons) { completedLessons = data.completedLessons; localStorage.setItem('kpss_v6_data', JSON.stringify(completedLessons)); }
+                    if(data.gamificationData) { gamificationData = data.gamificationData; localStorage.setItem('kpss_gamification_data', JSON.stringify(gamificationData)); }
+                    if(data.xpGrantedItems) { xpGrantedItems = new Set(data.xpGrantedItems); localStorage.setItem('kpss_xp_granted_items', JSON.stringify(data.xpGrantedItems)); }
+                    if(data.examHistory) { examHistory = data.examHistory; localStorage.setItem('kpss_exam_history', JSON.stringify(examHistory)); }
+                    if(data.todos) { todos = data.todos; localStorage.setItem('kpss_todos', JSON.stringify(todos)); }
+                    if(data.qTarget) { qTarget = data.qTarget; localStorage.setItem('kpss_q_target', qTarget); }
+                    if(data.qCurrent) { qCurrent = data.qCurrent; localStorage.setItem('kpss_q_current', qCurrent); }
+                    if(data.streakLog) { streakLog = data.streakLog; localStorage.setItem('kpss_streak_log', JSON.stringify(streakLog)); }
+                    if(data.pomoStats) { pomoStats = data.pomoStats; localStorage.setItem('kpss_pomo_stats', JSON.stringify(pomoStats)); }
+
+                    // Arayüzü Yenile
+                    renderWeeks();
+                    updateTotalProgress();
+                    updateGamificationUI();
+                    renderExamHistory();
+                    renderTodos();
+                    updateQuestionUI();
+                    renderStreak();
+                    updatePomoUI();
+                    renderChart();
+                    renderBadges();
+                }
+            } catch (error) { console.error("Veri yükleme hatası:", error); }
+        }
+
+        // Veri Kaydetme (Site -> Firestore)
+        window.saveUserData = async () => {
+            if (!auth || !auth.currentUser || !db) return;
+            const user = auth.currentUser;
+            const dataToSave = {
+                completedLessons: completedLessons,
+                gamificationData: gamificationData,
+                xpGrantedItems: Array.from(xpGrantedItems),
+                examHistory: examHistory,
+                todos: todos,
+                qTarget: qTarget,
+                qCurrent: qCurrent,
+                streakLog: streakLog,
+                pomoStats: pomoStats,
+                lastUpdated: new Date().toISOString()
+            };
+            try {
+                await db.collection('users').doc(user.uid).set(dataToSave, { merge: true });
+            } catch (error) { console.error("Veri kaydetme hatası:", error); }
+        };
+
+        // Google Giriş Butonu İçin
+        window.handleGoogleLogin = async () => {
+            if (!auth) return alert("Firebase bağlantısı kurulamadı.");
+            if (auth.currentUser) {
+                await auth.signOut();
+                location.reload();
+            } else {
+                try {
+                    await auth.signInWithPopup(provider);
+                } catch (error) {
+                    alert("Giriş hatası: " + error.message);
+                }
+            }
         };
 
         // YENİ: İsim Kaydetme Fonksiyonları
@@ -3025,88 +3074,6 @@
                 week.days.forEach(dIdx => {
                     const isDayDone = rawData[dIdx].every((_, lIdx) => completedLessons[`${dIdx}-${lIdx}`]);
                     if (isDayDone) doneDaysCount++;
-                });
-                const isCompleted = doneDaysCount === week.days.length;
-                const isLocked = index > 0 && !isWeekCompleted(index - 1);
-                const isCurrent = !isCompleted && !isLocked;
-
-                const item = document.createElement('div');
-                item.className = 'map-item';
-
-                const node = document.createElement('div');
-                node.className = `map-node ${isCompleted ? 'completed' : ''} ${isCurrent ? 'current' : ''} ${isLocked ? 'locked' : ''}`;
-                if (isLocked) {
-                    node.innerHTML = `${index + 1}<div class="absolute -top-2 -right-2 text-xs bg-[var(--osym-dark)] rounded-full w-5 h-5 flex items-center justify-center border border-white/20 shadow-sm z-20">🔒</div>`;
-                } else {
-                    node.innerHTML = isCompleted ? '✓' : (index + 1);
-                }
-                
-                node.onclick = () => {
-                    if(isLocked) return;
-                    document.getElementById('map-modal').classList.add('hidden');
-                    transitionToView(renderDays, week.id);
-                };
-
-                const content = document.createElement('div');
-                content.className = `map-content ${index % 2 === 0 ? 'left' : 'right'}`;
-                content.innerHTML = `
-                    <div class="map-title ${isCurrent ? 'text-[var(--osym-accent)]' : ''}">${week.title}</div>
-                    <div class="map-desc">${doneDaysCount}/${week.days.length} Gün Tamamlandı</div>
-                `;
-
-                item.appendChild(node);
-                item.appendChild(content);
-                wrapper.appendChild(item);
-            });
-            
-            container.appendChild(wrapper);
-            
-            // Scroll to current
-            setTimeout(() => {
-                const current = wrapper.querySelector('.map-node.current');
-                if(current) current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }, 100);
-        }
-
-        function isWeekCompleted(weekIndex) {
-            if (weekIndex < 0) return true;
-            const week = weeks[weekIndex];
-            let doneDaysCount = 0;
-            week.days.forEach(dIdx => {
-                const isDayDone = rawData[dIdx].every((_, lIdx) => completedLessons[`${dIdx}-${lIdx}`]);
-                if (isDayDone) doneDaysCount++;
-            });
-            return doneDaysCount === week.days.length;
-        }
-
-        window.onload = () => { 
-            renderWeeks(); 
-            updateTimerDisplay(); 
-            updateLiveMotivation();
-            updateCountdown();
-            renderExamHistory();
-            renderTodos();
-            initDailyPerformance();
-            renderStreak(); // Streak yükle
-            initPomoStats(); // Pomodoro istatistiklerini yükle
-            renderChart(); // Grafiği çiz
-            initGamification(); // Oyunlaştırmayı yükle
-            initFlashcards(); // Hap bilgileri yükle
-            setupCollapsibles(); // Mobil için açılır/kapanır bölümleri ayarla
-            initTheme(); // Temayı yükle
-            checkUserName(); // İsim kontrolü
-            setInterval(updateLiveMotivation, 30000);
-            setInterval(updateCountdown, 1000); // Saniyede bir güncelle
-        }
-    </script>
-    <script>
- document.addEventListener('DOMContentLoaded', function() {
-
-  });
-</script>
-</body>
-
-</html>             if (isDayDone) doneDaysCount++;
                 });
                 const isCompleted = doneDaysCount === week.days.length;
                 const isLocked = index > 0 && !isWeekCompleted(index - 1);
