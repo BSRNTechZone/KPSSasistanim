@@ -1437,10 +1437,17 @@
             const overlay = document.getElementById('welcome-overlay');
             const nameEl = document.getElementById('welcome-name');
             const imgEl = document.getElementById('welcome-avatar');
+            const rankEl = document.getElementById('welcome-rank');
 
-            nameEl.innerText = user.displayName;
+            nameEl.innerText = user.displayName || 'Misafir';
             // Google fotosu varsa kullan, yoksa baş harflerden avatar oluştur
             imgEl.src = user.photoURL ? user.photoURL : `https://ui-avatars.com/api/?name=${user.displayName}&background=f59e0b&color=fff&size=128`;
+
+            // Rütbe bilgisini ekle
+            if (rankEl && typeof gamificationData !== 'undefined' && typeof RANKS !== 'undefined') {
+                const currentRank = RANKS.slice().reverse().find(r => gamificationData.level >= r.level) || RANKS[0];
+                rankEl.innerHTML = `<span class="text-amber-500">${currentRank.icon}</span> Seviye ${gamificationData.level} - ${currentRank.title}`;
+            }
 
             overlay.classList.remove('hidden');
             
@@ -1487,10 +1494,8 @@
                     await loadUserData(user);
 
                     // Hoş Geldin Ekranı
-                    if (!sessionStorage.getItem('welcome_shown')) {
-                        window.showWelcomeScreen(user);
-                        sessionStorage.setItem('welcome_shown', 'true');
-                    }
+                    // Her girişte veya sayfa yenilemede göster
+                    window.showWelcomeScreen(user);
                 } else {
                     if(btnText) btnText.innerText = "Google Giriş";
                 }
@@ -3164,11 +3169,6 @@
             setInterval(updateCountdown, 1000); // Saniyede bir güncelle
         }
     </script>
-    <script>
- document.addEventListener('DOMContentLoaded', function() {
-
-  });
-</script>
 </body>
 
 </html>
