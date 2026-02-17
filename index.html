@@ -1682,6 +1682,7 @@
         function toggleLesson(key, dayIdx, weekId, event) {
             completedLessons[key] = !completedLessons[key];
             localStorage.setItem('kpss_v6_data', JSON.stringify(completedLessons));
+            if(window.saveUserData) window.saveUserData();
             
             const checkbox = event.currentTarget.querySelector('.checkbox-container');
             const text = event.currentTarget.querySelector('span');
@@ -1761,6 +1762,7 @@
         function reopenDay(dayIdx, weekId) {
             rawData[dayIdx].forEach((_, lIdx) => completedLessons[`${dayIdx}-${lIdx}`] = false);
             localStorage.setItem('kpss_v6_data', JSON.stringify(completedLessons));
+            if(window.saveUserData) window.saveUserData();
             renderDays(weekId);
             updateTotalProgress();
         }
@@ -1799,6 +1801,7 @@
             // YENİ: Kazanılan tüm XP'leri de sıfırla
             xpGrantedItems.clear();
             localStorage.removeItem('kpss_xp_granted_items');
+            if(window.saveUserData) window.saveUserData();
 
             renderWeeks();
             updateTotalProgress();
@@ -2129,6 +2132,7 @@
 
             examHistory.unshift(newExam); // En başa ekle
             localStorage.setItem('kpss_exam_history', JSON.stringify(examHistory));
+            if(window.saveUserData) window.saveUserData();
             
             document.getElementById('calc-score-result').innerText = score.toFixed(2);
             document.getElementById('last-score-display').classList.remove('hidden');
@@ -2169,6 +2173,7 @@
         function deleteExam(id) {
             examHistory = examHistory.filter(e => e.id !== id);
             localStorage.setItem('kpss_exam_history', JSON.stringify(examHistory));
+            if(window.saveUserData) window.saveUserData();
             renderExamHistory();
             renderChart(); // Grafiği güncelle
         }
@@ -2205,6 +2210,7 @@
             // Her göreve benzersiz bir ID ekle
             todos.unshift({ id: `todo_${Date.now()}`, text, completed: false });
             localStorage.setItem('kpss_todos', JSON.stringify(todos));
+            if(window.saveUserData) window.saveUserData();
             input.value = '';
             renderTodos();
             addXp(XP_VALUES.ADD_TODO, "Yeni Görev Eklendi");
@@ -2227,12 +2233,14 @@
                 }
             }
             localStorage.setItem('kpss_todos', JSON.stringify(todos));
+            if(window.saveUserData) window.saveUserData();
             renderTodos();
         }
 
         function deleteTodo(index) {
             todos.splice(index, 1);
             localStorage.setItem('kpss_todos', JSON.stringify(todos));
+            if(window.saveUserData) window.saveUserData();
             renderTodos();
         }
 
@@ -2269,6 +2277,7 @@
             let totalQSoved = parseInt(localStorage.getItem('kpss_total_q_solved')) || 0;
             totalQSoved += amount;
             localStorage.setItem('kpss_total_q_solved', totalQSoved);
+            if(window.saveUserData) window.saveUserData();
             addXp(XP_VALUES.QUESTION * amount, `${amount} Soru Çözüldü`);
 
             localStorage.setItem('kpss_q_date', new Date().toLocaleDateString('tr-TR'));
@@ -2291,6 +2300,7 @@
         function confirmDailyReset() {
             qCurrent = 0;
             localStorage.setItem('kpss_q_current', 0);
+            if(window.saveUserData) window.saveUserData();
             updateQuestionUI();
             closeDailyResetModal();
         }
@@ -2309,6 +2319,7 @@
             if(val && !isNaN(val)) {
                 qTarget = parseInt(val);
                 localStorage.setItem('kpss_q_target', qTarget);
+                if(window.saveUserData) window.saveUserData();
                 updateQuestionUI();
                 closeTargetModal();
             }
@@ -2343,6 +2354,7 @@
                     streakLog.push(today);
                     addXp(XP_VALUES.STREAK_DAY, "Günlük Hedef Serisi");
                     localStorage.setItem('kpss_streak_log', JSON.stringify(streakLog));
+                    if(window.saveUserData) window.saveUserData();
                     renderStreak();
                 }
             }
@@ -2434,7 +2446,10 @@
             renderBadges();
         }
 
-        function saveGamificationData() { localStorage.setItem('kpss_gamification_data', JSON.stringify(gamificationData)); }
+        function saveGamificationData() { 
+            localStorage.setItem('kpss_gamification_data', JSON.stringify(gamificationData));
+            if(window.saveUserData) window.saveUserData();
+        }
 
         function addXp(amount, reason) {
             if (!amount || amount <= 0) return;
@@ -2687,6 +2702,7 @@
             pomoStats.minutes += duration;
             addXp(XP_VALUES.POMODORO_SESSION, "Pomodoro Oturumu");
             localStorage.setItem('kpss_pomo_stats', JSON.stringify(pomoStats));
+            if(window.saveUserData) window.saveUserData();
             updatePomoUI();
 
             // Ses çal
@@ -3009,6 +3025,88 @@
                 week.days.forEach(dIdx => {
                     const isDayDone = rawData[dIdx].every((_, lIdx) => completedLessons[`${dIdx}-${lIdx}`]);
                     if (isDayDone) doneDaysCount++;
+                });
+                const isCompleted = doneDaysCount === week.days.length;
+                const isLocked = index > 0 && !isWeekCompleted(index - 1);
+                const isCurrent = !isCompleted && !isLocked;
+
+                const item = document.createElement('div');
+                item.className = 'map-item';
+
+                const node = document.createElement('div');
+                node.className = `map-node ${isCompleted ? 'completed' : ''} ${isCurrent ? 'current' : ''} ${isLocked ? 'locked' : ''}`;
+                if (isLocked) {
+                    node.innerHTML = `${index + 1}<div class="absolute -top-2 -right-2 text-xs bg-[var(--osym-dark)] rounded-full w-5 h-5 flex items-center justify-center border border-white/20 shadow-sm z-20">🔒</div>`;
+                } else {
+                    node.innerHTML = isCompleted ? '✓' : (index + 1);
+                }
+                
+                node.onclick = () => {
+                    if(isLocked) return;
+                    document.getElementById('map-modal').classList.add('hidden');
+                    transitionToView(renderDays, week.id);
+                };
+
+                const content = document.createElement('div');
+                content.className = `map-content ${index % 2 === 0 ? 'left' : 'right'}`;
+                content.innerHTML = `
+                    <div class="map-title ${isCurrent ? 'text-[var(--osym-accent)]' : ''}">${week.title}</div>
+                    <div class="map-desc">${doneDaysCount}/${week.days.length} Gün Tamamlandı</div>
+                `;
+
+                item.appendChild(node);
+                item.appendChild(content);
+                wrapper.appendChild(item);
+            });
+            
+            container.appendChild(wrapper);
+            
+            // Scroll to current
+            setTimeout(() => {
+                const current = wrapper.querySelector('.map-node.current');
+                if(current) current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 100);
+        }
+
+        function isWeekCompleted(weekIndex) {
+            if (weekIndex < 0) return true;
+            const week = weeks[weekIndex];
+            let doneDaysCount = 0;
+            week.days.forEach(dIdx => {
+                const isDayDone = rawData[dIdx].every((_, lIdx) => completedLessons[`${dIdx}-${lIdx}`]);
+                if (isDayDone) doneDaysCount++;
+            });
+            return doneDaysCount === week.days.length;
+        }
+
+        window.onload = () => { 
+            renderWeeks(); 
+            updateTimerDisplay(); 
+            updateLiveMotivation();
+            updateCountdown();
+            renderExamHistory();
+            renderTodos();
+            initDailyPerformance();
+            renderStreak(); // Streak yükle
+            initPomoStats(); // Pomodoro istatistiklerini yükle
+            renderChart(); // Grafiği çiz
+            initGamification(); // Oyunlaştırmayı yükle
+            initFlashcards(); // Hap bilgileri yükle
+            setupCollapsibles(); // Mobil için açılır/kapanır bölümleri ayarla
+            initTheme(); // Temayı yükle
+            checkUserName(); // İsim kontrolü
+            setInterval(updateLiveMotivation, 30000);
+            setInterval(updateCountdown, 1000); // Saniyede bir güncelle
+        }
+    </script>
+    <script>
+ document.addEventListener('DOMContentLoaded', function() {
+
+  });
+</script>
+</body>
+
+</html>             if (isDayDone) doneDaysCount++;
                 });
                 const isCompleted = doneDaysCount === week.days.length;
                 const isLocked = index > 0 && !isWeekCompleted(index - 1);
