@@ -1513,6 +1513,7 @@
                     if(data.qCurrent) { qCurrent = data.qCurrent; localStorage.setItem('kpss_q_current', qCurrent); }
                     if(data.streakLog) { streakLog = data.streakLog; localStorage.setItem('kpss_streak_log', JSON.stringify(streakLog)); }
                     if(data.pomoStats) { pomoStats = data.pomoStats; localStorage.setItem('kpss_pomo_stats', JSON.stringify(pomoStats)); }
+                    if(data.quickNotes) { localStorage.setItem('kpss_quick_notes', data.quickNotes); const qn = document.getElementById('quick-notes'); if(qn) qn.value = data.quickNotes; }
 
                     // Arayüzü Yenile
                     renderWeeks();
@@ -1525,6 +1526,19 @@
                     updatePomoUI();
                     renderChart();
                     renderBadges();
+
+                    // Başarılı Yükleme Bildirimi
+                    const toast = document.getElementById('toast');
+                    if(toast) {
+                        toast.querySelector('span').textContent = '☁️';
+                        document.getElementById('toast-quote').textContent = 'Verileriniz başarıyla yüklendi.';
+                        toast.classList.remove('hidden');
+                        toast.classList.add('show');
+                        setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.classList.add('hidden'), 700); }, 3000);
+                    }
+                } else {
+                    // Eğer bulutta veri yoksa (ilk giriş), eldeki verileri buluta kaydet
+                    saveUserData();
                 }
             } catch (error) { console.error("Veri yükleme hatası:", error); }
         }
@@ -1543,6 +1557,7 @@
                 qCurrent: qCurrent,
                 streakLog: streakLog,
                 pomoStats: pomoStats,
+                quickNotes: localStorage.getItem('kpss_quick_notes') || '',
                 lastUpdated: new Date().toISOString()
             };
             try {
@@ -2391,6 +2406,7 @@
         function saveQuickNotes() {
             const val = document.getElementById('quick-notes').value;
             localStorage.setItem('kpss_quick_notes', val);
+            if(window.saveUserData) window.saveUserData();
         }
 
         // --- YENİ: ZİNCİRİ KIRMA (STREAK) FONKSİYONLARI ---
