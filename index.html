@@ -365,6 +365,12 @@
                 if (user && btnText) {
                     btnText.innerText = "Çıkış (" + user.displayName.split(' ')[0] + ")";
                     localStorage.setItem('kpss_user_name', user.displayName);
+                    
+                    // Eğer bu oturumda henüz hoş geldin ekranı gösterilmediyse göster
+                    if (!sessionStorage.getItem('welcome_shown')) {
+                        window.showWelcomeScreen(user);
+                        sessionStorage.setItem('welcome_shown', 'true');
+                    }
                 } else if (btnText) {
                     btnText.innerText = "Google Giriş";
                 }
@@ -392,6 +398,19 @@
     </script>
 </head>
 <body>
+
+    <!-- WELCOME OVERLAY (YENİ: HOŞ GELDİN EKRANI) -->
+    <div id="welcome-overlay" class="fixed inset-0 bg-black/95 z-[10070] hidden flex items-center justify-center backdrop-blur-xl transition-opacity duration-1000">
+        <div class="text-center transform transition-all duration-1000 scale-100 flex flex-col items-center">
+            <div class="relative mb-8">
+                <div class="absolute inset-0 bg-amber-500 blur-2xl opacity-40 rounded-full animate-pulse"></div>
+                <img id="welcome-avatar" src="" class="relative w-32 h-32 rounded-full border-4 border-amber-500 shadow-2xl object-cover" alt="Avatar">
+            </div>
+            <h2 class="text-4xl md:text-6xl font-black text-white mb-4 uppercase tracking-tighter drop-shadow-lg">HOŞ GELDİN</h2>
+            <p id="welcome-name" class="text-2xl md:text-4xl font-['Playfair_Display'] text-amber-400 italic font-bold">Kullanıcı Adı</p>
+            <p class="text-slate-500 text-sm mt-4 font-bold uppercase tracking-widest animate-bounce mt-8">Başarıya giden yol yükleniyor...</p>
+        </div>
+    </div>
 
     <!-- VICTORY OVERLAY -->
     <div id="victory-overlay" class="fixed inset-0 bg-[#0a0f1c]/98 z-[10000] hidden flex flex-col items-center justify-center backdrop-blur-3xl overflow-y-auto py-10">
@@ -1473,6 +1492,28 @@
 
         let completedLessons = JSON.parse(localStorage.getItem('kpss_v6_data')) || {};
         let currentWeekId = null;
+
+        // YENİ: Hoş Geldin Ekranı Fonksiyonu
+        window.showWelcomeScreen = (user) => {
+            const overlay = document.getElementById('welcome-overlay');
+            const nameEl = document.getElementById('welcome-name');
+            const imgEl = document.getElementById('welcome-avatar');
+
+            nameEl.innerText = user.displayName;
+            // Google fotosu varsa kullan, yoksa baş harflerden avatar oluştur
+            imgEl.src = user.photoURL ? user.photoURL : `https://ui-avatars.com/api/?name=${user.displayName}&background=f59e0b&color=fff&size=128`;
+
+            overlay.classList.remove('hidden');
+            
+            // 2.5 saniye sonra yavaşça kaybol
+            setTimeout(() => {
+                overlay.classList.add('opacity-0');
+                setTimeout(() => {
+                    overlay.classList.add('hidden');
+                    overlay.classList.remove('opacity-0');
+                }, 1000);
+            }, 2500);
+        };
 
         // YENİ: İsim Kaydetme Fonksiyonları
         function checkUserName() {
