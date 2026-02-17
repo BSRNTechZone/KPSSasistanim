@@ -1493,9 +1493,13 @@
                     // Verileri Buluttan Çek
                     await loadUserData(user);
 
-                    // Hoş Geldin Ekranı
-                    // Her girişte veya sayfa yenilemede göster
-                    window.showWelcomeScreen(user);
+                    // Hoş Geldin Ekranı (15 Dakika Kuralı)
+                    const lastShown = localStorage.getItem('kpss_welcome_last_shown');
+                    const now = Date.now();
+                    if (!lastShown || (now - parseInt(lastShown)) > (15 * 60 * 1000)) {
+                        window.showWelcomeScreen(user);
+                        localStorage.setItem('kpss_welcome_last_shown', now);
+                    }
                 } else {
                     if(btnText) btnText.innerText = "Google Giriş";
                 }
@@ -1574,6 +1578,22 @@
         window.handleGoogleLogin = async () => {
             if (!auth) return alert("Firebase bağlantısı kurulamadı.");
             if (auth.currentUser) {
+                // ÇIKIŞ YAPILIRKEN YEREL VERİLERİ TEMİZLE
+                localStorage.removeItem('kpss_v6_data');
+                localStorage.removeItem('kpss_gamification_data');
+                localStorage.removeItem('kpss_xp_granted_items');
+                localStorage.removeItem('kpss_exam_history');
+                localStorage.removeItem('kpss_todos');
+                localStorage.removeItem('kpss_q_target');
+                localStorage.removeItem('kpss_q_current');
+                localStorage.removeItem('kpss_streak_log');
+                localStorage.removeItem('kpss_pomo_stats');
+                localStorage.removeItem('kpss_quick_notes');
+                localStorage.removeItem('kpss_user_name');
+                localStorage.removeItem('kpss_total_q_solved');
+                localStorage.removeItem('kpss_q_date');
+                localStorage.removeItem('kpss_welcome_last_shown'); // Hoş geldin süresini de sıfırla
+                
                 await auth.signOut();
                 location.reload();
             } else {
