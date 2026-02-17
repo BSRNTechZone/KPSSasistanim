@@ -778,6 +778,22 @@
         </div>
     </div>
 
+    <!-- YENİ: LİDERLİK TABLOSU MODALI -->
+    <div id="leaderboard-modal" class="fixed inset-0 bg-black/95 z-[10085] hidden flex flex-col items-center justify-center backdrop-blur-md p-4">
+        <div class="bg-[#161e31] border border-amber-500/20 p-6 md:p-8 rounded-3xl max-w-2xl w-full shadow-2xl relative max-h-[80vh] flex flex-col">
+            <button onclick="closeLeaderboardModal()" class="absolute top-4 right-4 text-slate-500 hover:text-white transition-colors text-xl z-10">✕</button>
+            <h2 class="text-2xl font-black text-white mb-6 uppercase tracking-tight flex items-center gap-3">
+                <span class="text-3xl text-amber-400">🏆</span> Liderlik Tablosu
+            </h2>
+            
+            <div id="leaderboard-list" class="space-y-2 overflow-y-auto custom-scrollbar pr-2 text-left">
+                <!-- JS ile doldurulacak -->
+                <div class="text-center text-slate-500 py-10">Yükleniyor...</div>
+            </div>
+            <p class="text-[10px] text-slate-600 mt-4 text-center">En yüksek XP puanına sahip ilk 10 kullanıcı gösterilir.</p>
+        </div>
+    </div>
+
     <!-- Toast -->
     <div id="toast" class="hidden">
         <span class="text-3xl"></span>
@@ -799,6 +815,7 @@
                 <button onclick="openHelpModal()" class="text-[10px] font-bold text-slate-500 hover:text-white transition-colors uppercase tracking-widest flex items-center gap-1"><span>❓</span> Nasıl Kullanılır?</button>
                 <button onclick="document.getElementById('theme-modal').classList.remove('hidden')" class="text-[10px] font-bold text-slate-500 hover:text-white transition-colors uppercase tracking-widest flex items-center gap-1"><span>🎨</span> Temalar</button>
                 <button onclick="openMapModal()" class="text-[10px] font-bold text-slate-500 hover:text-white transition-colors uppercase tracking-widest flex items-center gap-1"><span>🗺️</span> Harita</button>
+                <button onclick="openLeaderboardModal()" class="text-[10px] font-bold text-slate-500 hover:text-white transition-colors uppercase tracking-widest flex items-center gap-1"><span>🏆</span> Liderlik</button>
                 <button onclick="openAuthModal()" class="text-[10px] font-bold text-slate-500 hover:text-white transition-colors uppercase tracking-widest flex items-center gap-1"><span>👤</span> <span id="login-btn-text">Giriş Yap</span></button>
             </div>
 
@@ -1622,6 +1639,8 @@
             if (!auth || !auth.currentUser || !db) return;
             const user = auth.currentUser;
             const dataToSave = {
+                displayName: user.displayName,
+                photoURL: user.photoURL,
                 completedLessons: completedLessons,
                 gamificationData: gamificationData,
                 xpGrantedItems: Array.from(xpGrantedItems),
@@ -2852,6 +2871,57 @@
 
         function closeTermsModal() {
             document.getElementById('terms-modal').classList.add('hidden');
+        }
+
+        // YENİ: Liderlik Tablosu Fonksiyonları
+        async function openLeaderboardModal() {
+            if (!auth || !auth.currentUser) {
+                openAuthModal(); // Giriş yapmamışsa giriş ekranını aç
+                return;
+            }
+            const modal = document.getElementById('leaderboard-modal');
+            const list = document.getElementById('leaderboard-list');
+            modal.classList.remove('hidden');
+            list.innerHTML = '<div class="text-center text-slate-500 py-10 animate-pulse">Liderler yükleniyor...</div>';
+
+            try {
+                const query = db.collection('users').orderBy('gamificationData.xp', 'desc').limit(10);
+                const snapshot = await query.get();
+
+                if (snapshot.empty) {
+                    list.innerHTML = '<div class="text-center text-slate-500 py-10">Henüz sıralamada kimse yok.</div>';
+                    return;
+                }
+
+                let rank = 1;
+                let listHtml = '';
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const xp = data.gamificationData ? Math.round(data.gamificationData.xp) : 0;
+                    const avatar = data.photoURL || `https://ui-avatars.com/api/?name=${data.displayName}&background=1e293b&color=fff&size=128`;
+                    
+                    const isCurrentUser = doc.id === auth.currentUser.uid;
+                    const highlightClass = isCurrentUser ? 'bg-amber-500/10 border-amber-500/50' : 'bg-slate-800/50 border-white/5';
+
+                    listHtml += `
+                        <div class="flex items-center gap-4 p-3 rounded-2xl border ${highlightClass} transition-all">
+                            <div class="w-8 text-center font-black text-lg ${rank <= 3 ? 'text-amber-400' : 'text-slate-500'}">${rank}</div>
+                            <img src="${avatar}" class="w-10 h-10 rounded-full object-cover border-2 border-slate-700" alt="Avatar">
+                            <div class="flex-1 min-w-0"><p class="font-bold text-sm text-white truncate">${data.displayName || 'İsimsiz Kahraman'}</p><p class="text-[10px] text-slate-400 font-bold">${xp.toLocaleString('tr-TR')} XP</p></div>
+                        </div>
+                    `;
+                    rank++;
+                });
+                list.innerHTML = listHtml;
+
+            } catch (error) {
+                console.error("Liderlik tablosu hatası:", error);
+                list.innerHTML = `<div class="text-center text-red-500 py-10">Veriler yüklenemedi. Lütfen veritabanı (Firestore) kurallarınızı kontrol edin.</div>`;
+            }
+        }
+
+        function closeLeaderboardModal() {
+            document.getElementById('leaderboard-modal').classList.add('hidden');
         }
 
         // --- YENİ: POMODORO İSTATİSTİK FONKSİYONLARI ---
