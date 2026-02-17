@@ -683,6 +683,15 @@
                     <p class="text-slate-400 text-xs uppercase font-bold mb-1">Giriş Yapılan Hesap</p>
                     <p id="auth-current-user" class="text-white font-bold text-sm">kullanici@gmail.com</p>
                 </div>
+                
+                <div class="bg-slate-800/50 rounded-xl p-4 mb-2 border border-white/5">
+                    <p class="text-slate-400 text-xs uppercase font-bold mb-2">Sıralama İsmi (Nick)</p>
+                    <div class="flex gap-2">
+                        <input type="text" id="custom-username-input" class="flex-1 bg-slate-900 border border-white/10 rounded-lg px-3 py-2 text-white text-sm font-bold outline-none focus:border-blue-500 transition-colors" placeholder="Ad Soyad">
+                        <button onclick="saveCustomUsername()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-bold text-xs uppercase transition-colors shadow-lg">Kaydet</button>
+                    </div>
+                </div>
+
                 <button onclick="handleGoogleLogin()" class="w-full bg-red-600/90 hover:bg-red-600 text-white py-4 rounded-xl font-bold text-sm uppercase shadow-lg shadow-red-900/20 transition-all">Çıkış Yap</button>
             </div>
 
@@ -811,7 +820,7 @@
             <div class="inline-block px-5 py-2 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-black tracking-widest uppercase mb-6 animate-pulse">KPSS Dashboard v7.0</div>
             
             <!-- Üst Menü -->
-            <div class="flex justify-center gap-6 mb-6">
+            <div class="flex flex-wrap justify-center gap-3 md:gap-6 mb-8 px-2">
                 <button onclick="openHelpModal()" class="text-[10px] font-bold text-slate-500 hover:text-white transition-colors uppercase tracking-widest flex items-center gap-1"><span>❓</span> Nasıl Kullanılır?</button>
                 <button onclick="document.getElementById('theme-modal').classList.remove('hidden')" class="text-[10px] font-bold text-slate-500 hover:text-white transition-colors uppercase tracking-widest flex items-center gap-1"><span>🎨</span> Temalar</button>
                 <button onclick="openMapModal()" class="text-[10px] font-bold text-slate-500 hover:text-white transition-colors uppercase tracking-widest flex items-center gap-1"><span>🗺️</span> Harita</button>
@@ -1675,6 +1684,10 @@
                 profileOptions.classList.remove('hidden');
                 profileOptions.classList.add('flex');
                 currentUserEmail.innerText = auth.currentUser.email;
+                
+                // Kullanıcı adını inputa doldur
+                const nameInput = document.getElementById('custom-username-input');
+                if(nameInput) nameInput.value = auth.currentUser.displayName || '';
             } else {
                 // Giriş yapılmamışsa Giriş modunu göster
                 title.innerText = "Aramıza Katıl";
@@ -1688,6 +1701,31 @@
 
         window.closeAuthModal = () => {
             document.getElementById('auth-selection-modal').classList.add('hidden');
+        };
+
+        // YENİ: Kullanıcı Adı Kaydetme
+        window.saveCustomUsername = async () => {
+            const input = document.getElementById('custom-username-input');
+            const newName = input.value.trim();
+            if (!newName) return alert("Lütfen geçerli bir isim girin.");
+            
+            if (auth && auth.currentUser) {
+                try {
+                    // 1. Firebase Auth Profilini Güncelle
+                    await auth.currentUser.updateProfile({ displayName: newName });
+                    
+                    // 2. Firestore Veritabanını Güncelle (Liderlik tablosu için)
+                    await db.collection('users').doc(auth.currentUser.uid).set({ displayName: newName }, { merge: true });
+                    
+                    // 3. Arayüzü Güncelle
+                    localStorage.setItem('kpss_user_name', newName);
+                    document.getElementById('auth-modal-title').innerText = `Merhaba, ${newName.split(' ')[0]}`;
+                    alert("İsminiz başarıyla güncellendi! 🎉");
+                } catch (error) {
+                    console.error("İsim güncelleme hatası:", error);
+                    alert("Hata: " + error.message);
+                }
+            }
         };
 
         // Google Giriş Butonu İçin
