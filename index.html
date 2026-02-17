@@ -330,6 +330,66 @@
             }
         }
     </style>
+    <!-- FIREBASE & GOOGLE LOGIN ENTEGRASYONU -->
+    <script type="module">
+        // Firebase kütüphanelerini CDN üzerinden çekiyoruz
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+        // -----------------------------------------------------------------------
+        // BURAYI DOLDUR: Firebase Konsolundan alacağın yapılandırma kodları
+        // -----------------------------------------------------------------------
+        const firebaseConfig = {
+            apiKey: "AIzaSyA_BN7C4YdaDBWfnqNTdqM2fv89pNY3PRs",
+  authDomain: "kpss-b34e3.firebaseapp.com",
+  projectId: "kpss-b34e3",
+  storageBucket: "kpss-b34e3.firebasestorage.app",
+  messagingSenderId: "858677856177",
+  appId: "1:858677856177:web:ba1eaffdd4c19d3e1b5f90",
+  measurementId: "G-8GPTMZ73HX"
+        };
+        // -----------------------------------------------------------------------
+
+        let auth, provider;
+
+        // Config doluysa Firebase'i başlat
+        if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "BURAYA_YAPISTIR") {
+            const app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            provider = new GoogleAuthProvider();
+
+            // Kullanıcı durumunu dinle (Giriş yaptı mı?)
+            onAuthStateChanged(auth, (user) => {
+                const btnText = document.getElementById('login-btn-text');
+                if (user && btnText) {
+                    btnText.innerText = "Çıkış (" + user.displayName.split(' ')[0] + ")";
+                    localStorage.setItem('kpss_user_name', user.displayName);
+                } else if (btnText) {
+                    btnText.innerText = "Google Giriş";
+                }
+            });
+        }
+
+        // Global fonksiyon (HTML butonundan çağrılabilmesi için)
+        window.handleGoogleLogin = async () => {
+            if (!auth) {
+                alert("Lütfen kodun içindeki 'firebaseConfig' bölümünü kendi bilgilerinizle doldurun.");
+                return;
+            }
+            if (auth.currentUser) {
+                await signOut(auth);
+                location.reload();
+            } else {
+                try {
+                    await signInWithPopup(auth, provider);
+                    location.reload();
+                } catch (error) {
+                    alert("Giriş hatası: " + error.message);
+                }
+            }
+        };
+    </script>
 </head>
 <body>
 
@@ -599,6 +659,47 @@
         <button onclick="stopBreathing()" class="bg-slate-800 text-white px-8 py-3 rounded-full font-bold text-xs border border-white/10 hover:bg-red-900/50 transition-colors uppercase">Egzersizi Bitir</button>
     </div>
 
+    <!-- AUTH MODAL (YENİ: GİRİŞ / ÜYE OL) -->
+    <div id="auth-modal" class="fixed inset-0 bg-black/90 z-[10060] hidden flex items-center justify-center backdrop-blur-sm transition-all duration-300">
+        <div class="bg-[#161e31] border border-blue-500/30 p-8 rounded-3xl max-w-sm w-full text-center shadow-2xl relative">
+            <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-slate-500 hover:text-white transition-colors text-xl">✕</button>
+            
+            <h3 class="text-2xl font-black text-white mb-6 uppercase tracking-tight">Hesap İşlemleri</h3>
+
+            <!-- Sekmeler -->
+            <div class="flex border-b border-white/10 mb-6">
+                <button onclick="document.getElementById('form-login').classList.remove('hidden'); document.getElementById('form-register').classList.add('hidden'); this.classList.add('text-blue-500', 'border-blue-500'); this.nextElementSibling.classList.remove('text-blue-500', 'border-blue-500'); this.nextElementSibling.classList.add('text-slate-500', 'border-transparent');" class="flex-1 pb-2 text-sm font-bold text-blue-500 border-b-2 border-blue-500 transition-colors">Giriş Yap</button>
+                <button onclick="document.getElementById('form-login').classList.add('hidden'); document.getElementById('form-register').classList.remove('hidden'); this.classList.add('text-blue-500', 'border-blue-500'); this.previousElementSibling.classList.remove('text-blue-500', 'border-blue-500'); this.previousElementSibling.classList.add('text-slate-500', 'border-transparent');" class="flex-1 pb-2 text-sm font-bold text-slate-500 border-b-2 border-transparent hover:text-slate-300 transition-colors">Üye Ol</button>
+            </div>
+
+            <!-- Giriş Formu -->
+            <div id="form-login" class="flex flex-col gap-4">
+                <input type="email" id="login-email" placeholder="E-posta Adresi" class="bg-[#0a0f1c] border border-white/10 rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-blue-500 transition-colors">
+                <input type="password" id="login-password" placeholder="Şifre" class="bg-[#0a0f1c] border border-white/10 rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-blue-500 transition-colors">
+                <button onclick="handleEmailLogin()" class="bg-blue-600 text-white py-3 rounded-xl font-bold text-xs uppercase shadow-lg hover:bg-blue-500 transition-all">Giriş Yap</button>
+                
+                <div class="flex items-center gap-2 my-2">
+                    <div class="h-px bg-white/10 flex-1"></div>
+                    <span class="text-[10px] text-slate-500 uppercase">veya</span>
+                    <div class="h-px bg-white/10 flex-1"></div>
+                </div>
+
+                <button onclick="handleGoogleLogin()" class="bg-white text-slate-900 py-3 rounded-xl font-bold text-xs uppercase shadow-lg hover:bg-slate-200 transition-all flex items-center justify-center gap-2">
+                    <span class="text-lg">G</span> Google ile Giriş
+                </button>
+            </div>
+
+            <!-- Kayıt Formu -->
+            <div id="form-register" class="flex flex-col gap-4 hidden">
+                <input type="text" id="reg-name" placeholder="Ad Soyad (Sertifika İçin)" class="bg-[#0a0f1c] border border-white/10 rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-blue-500 transition-colors">
+                <input type="email" id="reg-email" placeholder="E-posta Adresi" class="bg-[#0a0f1c] border border-white/10 rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-blue-500 transition-colors">
+                <input type="password" id="reg-password" placeholder="Şifre (En az 6 karakter)" class="bg-[#0a0f1c] border border-white/10 rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-blue-500 transition-colors">
+                <button onclick="handleEmailRegister()" class="bg-emerald-600 text-white py-3 rounded-xl font-bold text-xs uppercase shadow-lg hover:bg-emerald-500 transition-all">Kayıt Ol</button>
+            </div>
+
+        </div>
+    </div>
+
     <!-- HELP MODAL (YENİ: KULLANIM REHBERİ) -->
     <div id="help-modal" class="fixed inset-0 bg-[#0a0f1c]/95 z-[10020] hidden flex flex-col items-center justify-center backdrop-blur-md p-4 overflow-y-auto">
         <div class="bg-[var(--osym-card)] border border-white/10 p-8 rounded-3xl max-w-2xl w-full shadow-2xl relative">
@@ -675,6 +776,7 @@
                 <button onclick="openHelpModal()" class="text-[10px] font-bold text-slate-500 hover:text-white transition-colors uppercase tracking-widest flex items-center gap-1"><span>❓</span> Nasıl Kullanılır?</button>
                 <button onclick="document.getElementById('theme-modal').classList.remove('hidden')" class="text-[10px] font-bold text-slate-500 hover:text-white transition-colors uppercase tracking-widest flex items-center gap-1"><span>🎨</span> Temalar</button>
                 <button onclick="openMapModal()" class="text-[10px] font-bold text-slate-500 hover:text-white transition-colors uppercase tracking-widest flex items-center gap-1"><span>🗺️</span> Harita</button>
+                <button onclick="handleGoogleLogin()" class="text-[10px] font-bold text-slate-500 hover:text-white transition-colors uppercase tracking-widest flex items-center gap-1"><span>🔑</span> <span id="login-btn-text">Google Giriş</span></button>
             </div>
 
             <h1 class="text-4xl sm:text-5xl md:text-7xl font-black text-white mb-4 uppercase tracking-tighter">KPSS  <span class="text-blue-500">ASİSTANIM</span></h1>
