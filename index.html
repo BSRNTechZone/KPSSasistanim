@@ -399,21 +399,6 @@
         </div>
     </div>
 
-    <!-- NAME INPUT MODAL (YENİ) -->
-    <div id="name-modal" class="fixed inset-0 bg-black/95 z-[10050] hidden flex items-center justify-center backdrop-blur-md">
-        <div class="bg-[#161e31] border border-amber-500/50 p-8 rounded-3xl max-w-md w-full text-center shadow-2xl relative overflow-hidden">
-            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-600"></div>
-            <h3 class="text-2xl font-black text-white mb-2 uppercase tracking-tight">Hoş Geldin Memur Adayı!</h3>
-            <p class="text-slate-400 text-xs font-medium mb-6">Sertifikanda yazması için adını ve soyadını girer misin?</p>
-            
-            <div class="relative mb-6">
-                <input type="text" id="user-name-input" class="w-full bg-[#0a0f1c] border border-white/10 rounded-xl px-4 py-4 text-white text-lg font-bold text-center focus:border-amber-500 outline-none placeholder:text-slate-700 transition-colors" placeholder="Ad Soyad">
-            </div>
-            
-            <button onclick="saveUserName()" class="w-full bg-gradient-to-r from-amber-600 to-yellow-500 text-white py-4 rounded-xl font-black text-sm uppercase shadow-lg hover:scale-[1.02] transition-transform">Kaydet ve Başla 🚀</button>
-        </div>
-    </div>
-
     <!-- RESET CONFIRMATION MODAL (YENİ) -->
     <div id="reset-modal" class="fixed inset-0 bg-black/90 z-[10001] hidden flex items-center justify-center backdrop-blur-sm transition-all duration-300">
         <div class="bg-[#161e31] border border-red-500/30 p-8 rounded-3xl max-w-sm text-center shadow-2xl transform scale-100">
@@ -1604,22 +1589,6 @@
                 }
             }
         };
-
-        // YENİ: İsim Kaydetme Fonksiyonları
-        function checkUserName() {
-            const name = localStorage.getItem('kpss_user_name');
-            if (!name) {
-                document.getElementById('name-modal').classList.remove('hidden');
-            }
-        }
-
-        function saveUserName() {
-            const input = document.getElementById('user-name-input');
-            const name = input.value.trim();
-            if (!name) return alert('Lütfen bir isim gir.');
-            localStorage.setItem('kpss_user_name', name);
-            document.getElementById('name-modal').classList.add('hidden');
-        }
 
         function updateLiveMotivation() {
             const el = document.getElementById('live-motivation');
@@ -3184,7 +3153,6 @@
             initFlashcards(); // Hap bilgileri yükle
             setupCollapsibles(); // Mobil için açılır/kapanır bölümleri ayarla
             initTheme(); // Temayı yükle
-            checkUserName(); // İsim kontrolü
             setInterval(updateLiveMotivation, 30000);
             setInterval(updateCountdown, 1000); // Saniyede bir güncelle
         }
