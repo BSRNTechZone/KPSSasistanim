@@ -3151,6 +3151,12 @@
                     // Adminleri sıralamadan gizle
                     if (ADMIN_EMAILS.includes(data.email)) return;
 
+                    // YENİ: Madalya ekle
+                    let medal = '';
+                    if (rank === 1) medal = '🥇';
+                    if (rank === 2) medal = '🥈';
+                    if (rank === 3) medal = '🥉';
+
                     const xp = data.gamificationData ? Math.round(data.gamificationData.xp) : 0;
                     const avatar = data.photoURL || `https://ui-avatars.com/api/?name=${data.displayName}&background=1e293b&color=fff&size=128`;
                     
@@ -3162,6 +3168,7 @@
                             <div class="w-8 text-center font-black text-lg ${rank <= 3 ? 'text-amber-400' : 'text-slate-500'}">${rank}</div>
                             <img src="${avatar}" class="w-10 h-10 rounded-full object-cover border-2 border-slate-700" alt="Avatar">
                             <div class="flex-1 min-w-0"><p class="font-bold text-sm text-white truncate">${data.displayName || 'İsimsiz Kahraman'}</p><p class="text-[10px] text-slate-400 font-bold">${xp.toLocaleString('tr-TR')} XP</p></div>
+                            <div class="flex-1 min-w-0"><p class="font-bold text-sm text-white truncate">${data.displayName || 'İsimsiz Kahraman'} ${medal}</p><p class="text-[10px] text-slate-400 font-bold">${xp.toLocaleString('tr-TR')} XP</p></div>
                         </div>
                     `;
                     rank++;
@@ -3263,6 +3270,9 @@
                     const displayName = isMsgFromAdmin ? 'YÖNETİCİ' : msg.displayName;
                     const adminBadge = isMsgFromAdmin ? '<span class="chat-badge-admin">👑</span>' : '';
                     
+                    // YENİ: Admin avatarı için taç
+                    const adminAvatarCrown = isMsgFromAdmin ? '<div class="absolute -top-1 -right-1 bg-amber-500 text-white text-[8px] w-4 h-4 rounded-full flex items-center justify-center border-2 border-[#0f172a] shadow-md">👑</div>' : '';
+
                     // Silme Butonu (Giriş yapan kişi adminse veya kendi mesajıysa)
                     const canDelete = isAdmin(); // Sadece adminler silebilir
                     const deleteBtn = canDelete ? `<span onclick="deleteMessage('${msg.id}')" class="delete-msg-btn" title="Sil">🗑️</span>` : '';
@@ -3280,6 +3290,11 @@
                             <div class="chat-message ${isMine ? 'mine' : ''} ${isMsgFromAdmin ? 'admin' : ''}">
                                 <img src="${avatar}" class="w-8 h-8 rounded-full object-cover border border-white/10 shadow-sm shrink-0">
                                 <div class="flex flex-col ${isMine ? 'items-end' : 'items-start'}">
+                                <div class="relative shrink-0">
+                                    <img src="${avatar}" class="w-8 h-8 rounded-full object-cover border border-white/10 shadow-sm">
+                                    ${adminAvatarCrown}
+                                </div>
+                                <div class="flex flex-col ${isMine ? 'items-end' : 'items-start'} max-w-[85%]">
                                     <div class="chat-info">${displayName} ${adminBadge} • ${time} ${deleteBtn}</div>
                                     <div class="chat-bubble">${msg.text}</div>
                                 </div>
