@@ -3175,7 +3175,8 @@
                     
                     // Admin Kontrolü (Mesajı atan kişi admin mi?)
                     const isMsgFromAdmin = ADMIN_EMAILS.includes(msg.email);
-                    const adminBadge = isMsgFromAdmin ? '<span class="chat-badge-admin">👑 YÖNETİCİ</span>' : '';
+                    const displayName = isMsgFromAdmin ? 'YÖNETİCİ' : msg.displayName;
+                    const adminBadge = isMsgFromAdmin ? '<span class="chat-badge-admin">👑</span>' : '';
                     
                     // Silme Butonu (Giriş yapan kişi adminse veya kendi mesajıysa)
                     const canDelete = isAdmin() || isMine; 
@@ -3194,7 +3195,7 @@
                             <div class="chat-message ${isMine ? 'mine' : ''} ${isMsgFromAdmin ? 'admin' : ''}">
                                 <img src="${avatar}" class="w-8 h-8 rounded-full object-cover border border-white/10 shadow-sm shrink-0">
                                 <div class="flex flex-col ${isMine ? 'items-end' : 'items-start'} max-w-[80%]">
-                                    <div class="chat-info">${msg.displayName} ${adminBadge} • ${time} ${deleteBtn}</div>
+                                    <div class="chat-info">${displayName} ${adminBadge} • ${time} ${deleteBtn}</div>
                                     <div class="chat-bubble">${msg.text}</div>
                                 </div>
                             </div>
@@ -3289,6 +3290,8 @@
             if (!text) return;
             if (!toChat && !toHome) return alert("Lütfen en az bir yayınlama yeri seçin.");
             
+            if (!db) return alert("Veritabanı bağlantısı kurulamadı.");
+
             try {
                 const batch = db.batch();
                 const timestamp = firebase.firestore.FieldValue.serverTimestamp();
