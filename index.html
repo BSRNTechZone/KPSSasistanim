@@ -118,8 +118,8 @@
         #toast {
             position: fixed; top: 24px; left: 50%; transform: translateX(-50%) translateY(-150%);
             background: var(--osym-card); color: white; padding: 18px 36px; border-radius: 24px;
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.6); transition: all 0.7s cubic-bezier(0.68, -0.6, 0.32, 1.6); 
-            z-index: 10000; border: 2px solid #fbbf24; display: flex; flex-direction: column; align-items: center; gap: 8px;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.6); transition: all 0.7s cubic-bezier(0.68, -0.6, 0.32, 1.6);
+            z-index: 10100; border: 2px solid #fbbf24; display: flex; flex-direction: column; align-items: center; gap: 8px;
         }
         #toast.show { transform: translateX(-50%) translateY(0); }
 
@@ -803,6 +803,35 @@
         </div>
     </div>
 
+    <!-- ANNOUNCEMENT MODAL (YENİ: DUYURU / BETA UYARISI) -->
+    <div id="announcement-modal" class="fixed inset-0 bg-black/90 z-[10090] hidden flex items-center justify-center backdrop-blur-sm transition-all duration-300">
+        <div class="bg-gradient-to-br from-blue-900/90 to-slate-900/90 border border-blue-500/30 p-8 rounded-3xl max-w-md w-full text-center shadow-2xl relative overflow-hidden">
+            <!-- Dekoratif -->
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 via-purple-400 to-amber-400"></div>
+            <div class="absolute -top-10 -right-10 w-32 h-32 bg-blue-500/20 rounded-full blur-3xl"></div>
+            
+            <button onclick="closeAnnouncementModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors text-xl">✕</button>
+
+            <div class="w-20 h-20 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
+                <span class="text-4xl">🚀</span>
+            </div>
+            
+            <h3 class="text-2xl font-black text-white mb-3 uppercase tracking-tight">BETA SÜRÜMÜNDEYİZ!</h3>
+            
+            <div class="bg-blue-500/10 rounded-xl p-4 mb-6 border border-blue-500/10">
+                <p class="text-blue-200 text-sm font-medium leading-relaxed">
+                    Sitemiz henüz çok yeni ve geliştirilme aşamasında. Bu süreçte bazı küçük hatalarla karşılaşabilirsin.
+                </p>
+            </div>
+            
+            <p class="text-slate-400 text-xs leading-relaxed mb-8">
+                Karşılaştığın hataları veya "Şu özellik de olsa harika olur!" dediğin önerilerini sayfanın en altındaki <span class="text-amber-400 font-bold">Instagram</span> adresimizden bize iletebilirsin. Geri bildirimlerin bizim için altın değerinde! 💛
+            </p>
+            
+            <button onclick="closeAnnouncementModal()" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-xl font-black text-xs uppercase shadow-lg hover:scale-[1.02] transition-transform">Anlaşıldı, Keşfetmeye Başla!</button>
+        </div>
+    </div>
+
     <!-- Toast -->
     <div id="toast" class="hidden">
         <span class="text-3xl"></span>
@@ -810,7 +839,7 @@
     </div>
 
     <!-- XP KAZANMA TOAST'I -->
-    <div id="xp-toast" class="fixed bottom-5 right-5 bg-gradient-to-br from-slate-800 to-slate-900 border border-amber-500/50 text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 transform translate-y-20 opacity-0 transition-all duration-500 z-[10000]">
+    <div id="xp-toast" class="fixed bottom-5 right-5 bg-gradient-to-br from-slate-800 to-slate-900 border border-amber-500/50 text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 transform translate-y-20 opacity-0 transition-all duration-500 z-[10100]">
         <span class="font-black text-amber-400" id="xp-toast-amount">+50 XP</span>
         <span class="text-xs text-slate-400" id="xp-toast-reason">Pomodoro Tamamlandı</span>
     </div>
@@ -2969,6 +2998,19 @@
             document.getElementById('leaderboard-modal').classList.add('hidden');
         }
 
+        // YENİ: Duyuru Modalı Fonksiyonları
+        function showAnnouncementModal() {
+            // Eğer bu oturumda daha önce gösterilmediyse göster
+            if (!sessionStorage.getItem('announcement_shown')) {
+                document.getElementById('announcement-modal').classList.remove('hidden');
+                sessionStorage.setItem('announcement_shown', 'true');
+            }
+        }
+
+        function closeAnnouncementModal() {
+            document.getElementById('announcement-modal').classList.add('hidden');
+        }
+
         // --- YENİ: POMODORO İSTATİSTİK FONKSİYONLARI ---
         let pomoStats = JSON.parse(localStorage.getItem('kpss_pomo_stats')) || { date: new Date().toLocaleDateString('tr-TR'), sessions: 0, minutes: 0 };
         const timerSound = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
@@ -3389,6 +3431,7 @@
             initFlashcards(); // Hap bilgileri yükle
             setupCollapsibles(); // Mobil için açılır/kapanır bölümleri ayarla
             initTheme(); // Temayı yükle
+            showAnnouncementModal(); // Duyuru modalını göster
             setInterval(updateLiveMotivation, 30000);
             setInterval(updateCountdown, 1000); // Saniyede bir güncelle
         }
