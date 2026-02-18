@@ -713,6 +713,32 @@
         </div>
     </div>
 
+    <!-- USER MANAGEMENT MODAL (YENİ: ADMİN) -->
+    <div id="user-management-modal" class="fixed inset-0 bg-black/95 z-[10080] hidden flex flex-col items-center justify-center backdrop-blur-md p-4">
+        <div class="bg-[#161e31] border border-white/10 p-6 md:p-8 rounded-3xl max-w-2xl w-full shadow-2xl relative flex flex-col h-[80vh]">
+            <button onclick="closeUserManagementModal()" class="absolute top-4 right-4 text-slate-500 hover:text-white transition-colors text-xl z-10">✕</button>
+            <h2 class="text-xl md:text-2xl font-black text-white mb-6 uppercase tracking-tight flex items-center gap-3">
+                <span class="text-3xl">👥</span> Kullanıcı Yönetimi
+            </h2>
+            <div id="user-list-container" class="flex-1 space-y-2 overflow-y-auto custom-scrollbar pr-2">
+                <!-- Kullanıcılar JS ile yüklenecek -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ANNOUNCEMENT MANAGEMENT MODAL (YENİ: ADMİN) -->
+    <div id="announcement-management-modal" class="fixed inset-0 bg-black/90 z-[10081] hidden flex items-center justify-center backdrop-blur-sm">
+        <div class="bg-[#161e31] border border-amber-500/30 p-8 rounded-3xl max-w-md w-full shadow-2xl relative">
+            <button onclick="closeAnnouncementManagementModal()" class="absolute top-4 right-4 text-slate-500 hover:text-white transition-colors text-xl">✕</button>
+            <h3 class="text-xl font-black text-white mb-4 uppercase tracking-tight">Ana Ekran Duyurusunu Yönet</h3>
+            <textarea id="announcement-manage-text" class="w-full bg-[#0a0f1c] border border-white/10 rounded-xl p-4 text-white mb-4 focus:border-amber-500 outline-none resize-none h-32" placeholder="Yüklenecek duyuru metni..."></textarea>
+            <div class="flex gap-3">
+                <button onclick="deleteHomeAnnouncement()" class="flex-1 bg-red-600 text-white py-3 rounded-xl font-bold text-xs uppercase shadow-lg hover:bg-red-500">Kaldır</button>
+                <button onclick="updateHomeAnnouncement()" class="flex-1 bg-amber-600 text-white py-3 rounded-xl font-bold text-xs uppercase shadow-lg hover:bg-amber-500">Güncelle</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast -->
     <div id="toast" class="hidden">
         <span class="text-3xl"></span>
@@ -1366,6 +1392,17 @@
                     <span>🏆</span> Başarımlarımı Gör
                 </button>
 
+                <!-- YENİ: ADMİN KONTROLLERİ -->
+                <div id="admin-profile-controls" class="hidden flex-col gap-3 mt-4 pt-4 border-t border-white/10">
+                    <h4 class="text-red-400 font-black text-[10px] uppercase tracking-widest mb-1 text-left">Yönetici Paneli</h4>
+                    <button onclick="openUserManagementModal()" class="w-full bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-xl font-bold text-xs uppercase transition-all flex items-center justify-center gap-2">
+                        <span>👥</span> Kullanıcıları Yönet
+                    </button>
+                    <button onclick="openAnnouncementManagementModal()" class="w-full bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-xl font-bold text-xs uppercase transition-all flex items-center justify-center gap-2">
+                        <span>📢</span> Duyuruları Yönet
+                    </button>
+                </div>
+
                 <button onclick="handleGoogleLogin()" class="w-full bg-red-600/90 hover:bg-red-600 text-white py-4 rounded-xl font-bold text-sm uppercase shadow-lg shadow-red-900/20 transition-all mt-4">Çıkış Yap</button>
             </div>
         </div>
@@ -1718,6 +1755,17 @@
                     // Verileri Buluttan Çek
                     await loadUserData(user);
 
+                    // YENİ: BAN KONTROLÜ
+                    const userDoc = await db.collection('users').doc(user.uid).get();
+                    if (userDoc.exists && userDoc.data().isBanned === true) {
+                        alert('Hesabınız bir yönetici tarafından askıya alınmıştır. Lütfen geliştirici ile iletişime geçin.');
+                        await auth.signOut();
+                        // Sayfayı yenilemeden önce tüm yerel verileri temizle
+                        localStorage.clear();
+                        location.reload();
+                        return; // Fonksiyonun geri kalanını çalıştırma
+                    }
+
                     // YENİ: Admin Yetkisini Güncelle (İzin hatalarını önlemek için)
                     await ensureAdminRole(user);
 
@@ -1829,6 +1877,7 @@
             const authOptions = document.getElementById('auth-options');
             const profileOptions = document.getElementById('profile-options');
             const currentUserEmail = document.getElementById('auth-current-user');
+            const adminControls = document.getElementById('admin-profile-controls');
 
             if (auth && auth.currentUser) {
                 // Kullanıcı giriş yapmışsa Profil modunu göster
@@ -1842,6 +1891,14 @@
                 // Kullanıcı adını inputa doldur
                 const nameInput = document.getElementById('custom-username-input');
                 if(nameInput) nameInput.value = auth.currentUser.displayName || '';
+
+                // YENİ: Admin ise admin panelini göster
+                if (isAdmin()) {
+                    adminControls.classList.remove('hidden');
+                    adminControls.classList.add('flex');
+                } else {
+                    adminControls.classList.add('hidden');
+                }
             } else {
                 // Giriş yapılmamışsa Giriş modunu göster
                 title.innerText = "Aramıza Katıl";
@@ -1849,6 +1906,7 @@
                 authOptions.classList.remove('hidden');
                 profileOptions.classList.add('hidden');
                 profileOptions.classList.remove('flex');
+                adminControls.classList.add('hidden');
             }
             // modal.classList.remove('hidden'); // Artık sayfa geçişi ile yapılıyor
         };
@@ -3292,6 +3350,115 @@
             } catch(e) { 
                 console.error(e);
                 alert("Silme işlemi başarısız. Yetkiniz olmayabilir."); 
+            }
+        }
+
+        // YENİ: Admin Paneli Fonksiyonları (Profil Sayfası)
+        let currentAnnouncementId = null; // Yönetilecek duyurunun ID'si
+
+        function openUserManagementModal() {
+            const container = document.getElementById('user-list-container');
+            container.innerHTML = '<div class="text-center text-slate-500 py-10 animate-pulse">Kullanıcılar yükleniyor...</div>';
+            document.getElementById('user-management-modal').classList.remove('hidden');
+
+            db.collection('users').get().then(snapshot => {
+                if (snapshot.empty) {
+                    container.innerHTML = '<div class="text-center text-slate-500 py-10">Kayıtlı kullanıcı bulunamadı.</div>';
+                    return;
+                }
+                let listHtml = '';
+                snapshot.forEach(doc => {
+                    const user = doc.data();
+                    const isBanned = user.isBanned || false;
+                    const avatar = user.photoURL || `https://ui-avatars.com/api/?name=${user.displayName}&background=1e293b&color=fff&size=64`;
+                    
+                    // Adminleri listeleme
+                    if (ADMIN_EMAILS.includes(user.email)) return;
+
+                    listHtml += `
+                        <div class="flex items-center gap-4 p-3 rounded-2xl ${isBanned ? 'bg-red-900/20' : 'bg-slate-800/50'} border border-white/5">
+                            <img src="${avatar}" class="w-10 h-10 rounded-full object-cover border-2 border-slate-700" alt="Avatar">
+                            <div class="flex-1 min-w-0">
+                                <p class="font-bold text-sm ${isBanned ? 'text-red-400' : 'text-white'} truncate">${user.displayName || 'İsimsiz'}</p>
+                                <p class="text-[10px] text-slate-500 font-bold">${user.email}</p>
+                            </div>
+                            <button onclick="toggleUserBan('${doc.id}', ${isBanned})" class="px-4 py-2 rounded-lg text-xs font-bold uppercase transition-colors ${isBanned ? 'bg-emerald-600 hover:bg-emerald-500 text-white' : 'bg-red-600 hover:bg-red-500 text-white'}">
+                                ${isBanned ? 'Engeli Kaldır' : 'Engelle'}
+                            </button>
+                        </div>
+                    `;
+                });
+                container.innerHTML = listHtml;
+            }).catch(error => {
+                container.innerHTML = `<div class="text-center text-red-500 py-10">Kullanıcılar yüklenemedi: ${error.message}</div>`;
+            });
+        }
+
+        function closeUserManagementModal() {
+            document.getElementById('user-management-modal').classList.add('hidden');
+        }
+
+        async function toggleUserBan(userId, isBanned) {
+            if (!confirm(`Bu kullanıcıyı ${isBanned ? 'engellemekten vazgeçmek' : 'engellemek'} istediğinize emin misiniz?`)) return;
+            try {
+                await db.collection('users').doc(userId).update({ isBanned: !isBanned });
+                alert(`Kullanıcı başarıyla ${!isBanned ? 'engellendi' : 'engeli kaldırıldı'}.`);
+                openUserManagementModal(); // Listeyi yenile
+            } catch (e) {
+                alert('İşlem başarısız: ' + e.message);
+            }
+        }
+
+        async function openAnnouncementManagementModal() {
+            const textarea = document.getElementById('announcement-manage-text');
+            textarea.value = '';
+            textarea.placeholder = 'Duyuru yükleniyor...';
+            currentAnnouncementId = null;
+            document.getElementById('announcement-management-modal').classList.remove('hidden');
+
+            try {
+                const snapshot = await db.collection('announcements').orderBy('createdAt', 'desc').limit(1).get();
+                if (snapshot.empty) {
+                    textarea.placeholder = 'Yönetilecek ana ekran duyurusu bulunmuyor.';
+                    return;
+                }
+                const doc = snapshot.docs[0];
+                currentAnnouncementId = doc.id;
+                textarea.value = doc.data().text;
+            } catch (e) {
+                textarea.placeholder = 'Duyuru yüklenirken hata oluştu.';
+                console.error(e);
+            }
+        }
+
+        function closeAnnouncementManagementModal() {
+            document.getElementById('announcement-management-modal').classList.add('hidden');
+        }
+
+        async function updateHomeAnnouncement() {
+            if (!currentAnnouncementId) return alert('Güncellenecek bir duyuru bulunamadı.');
+            const newText = document.getElementById('announcement-manage-text').value.trim();
+            if (!newText) return alert('Duyuru metni boş olamaz.');
+
+            try {
+                await db.collection('announcements').doc(currentAnnouncementId).update({ text: newText });
+                alert('Duyuru başarıyla güncellendi.');
+                closeAnnouncementManagementModal();
+            } catch (e) {
+                alert('Güncelleme başarısız: ' + e.message);
+            }
+        }
+
+        async function deleteHomeAnnouncement() {
+            if (!currentAnnouncementId) return alert('Silinecek bir duyuru bulunamadı.');
+            if (!confirm('Ana ekrandaki duyuruyu kalıcı olarak kaldırmak istediğinize emin misiniz?')) return;
+
+            try {
+                await db.collection('announcements').doc(currentAnnouncementId).delete();
+                alert('Duyuru başarıyla kaldırıldı.');
+                closeAnnouncementManagementModal();
+            } catch (e) {
+                alert('Kaldırma işlemi başarısız: ' + e.message);
             }
         }
 
