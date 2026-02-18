@@ -286,16 +286,21 @@
         /* YENİ: Sohbet Stilleri */
         .chat-message { display: flex; gap: 10px; margin-bottom: 12px; align-items: flex-end; animation: fadeIn 0.3s ease; }
         .chat-message.mine { flex-direction: row-reverse; }
-        .chat-bubble { max-width: 85%; padding: 14px 18px; border-radius: 20px; font-size: 15px; line-height: 1.5; position: relative; word-wrap: break-word; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-        .chat-bubble { max-width: 85%; padding: 16px 24px; border-radius: 24px; font-size: 17px; line-height: 1.6; position: relative; word-wrap: break-word; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .chat-bubble { max-width: 92%; padding: 12px 18px; border-radius: 20px; font-size: 15px; line-height: 1.5; position: relative; word-wrap: break-word; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         .chat-message.mine .chat-bubble { background: var(--osym-accent); color: white; border-bottom-right-radius: 2px; }
         .chat-message:not(.mine) .chat-bubble { background: rgba(255,255,255,0.1); color: #e2e8f0; border-bottom-left-radius: 2px; }
+        
+        /* YENİ: Admin Mesaj Stili */
+        .chat-message.admin .chat-bubble { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4); border: 1px solid rgba(255,255,255,0.2); font-weight: 600; }
+        .chat-message.admin.mine .chat-bubble { border-bottom-right-radius: 2px; border-bottom-left-radius: 20px; }
+        .chat-message.admin:not(.mine) .chat-bubble { border-bottom-left-radius: 2px; border-bottom-right-radius: 20px; }
+
         .chat-info { font-size: 9px; color: #64748b; margin-bottom: 4px; font-weight: bold; }
         .chat-message.mine .chat-info { text-align: right; }
         /* YENİ: Admin ve Duyuru Stilleri */
         .chat-message.announcement { flex-direction: column; align-items: center; margin: 20px 0; }
         .chat-message.announcement .chat-bubble { background: linear-gradient(135deg, #b45309 0%, #f59e0b 100%); color: #0a0f1c; font-weight: 900; text-align: center; border-radius: 20px; max-width: 90%; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4); border: 2px solid #fff; font-size: 16px; text-transform: uppercase; letter-spacing: 1px; }
-        .chat-badge-admin { background: #ef4444; color: white; padding: 2px 6px; border-radius: 4px; font-size: 8px; font-weight: 900; margin-left: 4px; vertical-align: middle; box-shadow: 0 2px 5px rgba(239,68,68,0.4); }
+        .chat-badge-admin { background: transparent; color: #f59e0b; padding: 0; font-size: 12px; font-weight: 900; margin-left: 4px; vertical-align: middle; text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
         .delete-msg-btn { opacity: 0.5; transition: all 0.2s; color: #ef4444; cursor: pointer; padding: 4px; font-size: 14px; margin-left: 5px; }
         .delete-msg-btn:hover { opacity: 1; transform: scale(1.2); }
         .chat-message:hover .delete-msg-btn { opacity: 1; }
@@ -3289,6 +3294,12 @@
 
             if (!text) return;
             if (!toChat && !toHome) return alert("Lütfen en az bir yayınlama yeri seçin.");
+            
+            // YENİ GÜVENLİK KONTROLÜ
+            if (!auth || !auth.currentUser) {
+                alert("Hata: Bu işlemi yapmak için giriş yapmalısınız.");
+                return;
+            }
             
             if (!db) return alert("Veritabanı bağlantısı kurulamadı.");
 
