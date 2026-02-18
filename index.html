@@ -685,6 +685,29 @@
         </div>
     </div>
 
+    <!-- CREATE ANNOUNCEMENT MODAL (YENİ: DUYURU OLUŞTURMA) -->
+    <div id="create-announcement-modal" class="fixed inset-0 bg-black/90 z-[10060] hidden flex items-center justify-center backdrop-blur-sm transition-all duration-300">
+        <div class="bg-[#161e31] border border-amber-500/30 p-8 rounded-3xl max-w-md w-full shadow-2xl relative">
+            <button onclick="closeCreateAnnouncementModal()" class="absolute top-4 right-4 text-slate-500 hover:text-white transition-colors text-xl">✕</button>
+            <h3 class="text-xl font-black text-white mb-4 uppercase tracking-tight flex items-center gap-2"><span class="text-2xl">📢</span> Duyuru Oluştur</h3>
+            
+            <textarea id="announcement-text" class="w-full bg-[#0a0f1c] border border-white/10 rounded-xl p-4 text-white mb-6 focus:border-amber-500 outline-none resize-none h-32" placeholder="Duyuru metnini buraya yazın..."></textarea>
+            
+            <div class="flex gap-6 mb-8 justify-center">
+                <label class="flex items-center gap-3 text-slate-300 cursor-pointer bg-slate-800/50 px-4 py-2 rounded-lg border border-white/5 hover:bg-slate-800 transition-colors">
+                    <input type="checkbox" id="target-chat" class="w-5 h-5 accent-amber-500 rounded" checked>
+                    <span class="text-xs font-bold uppercase">Sohbet</span>
+                </label>
+                <label class="flex items-center gap-3 text-slate-300 cursor-pointer bg-slate-800/50 px-4 py-2 rounded-lg border border-white/5 hover:bg-slate-800 transition-colors">
+                    <input type="checkbox" id="target-home" class="w-5 h-5 accent-amber-500 rounded">
+                    <span class="text-xs font-bold uppercase">Ana Ekran</span>
+                </label>
+            </div>
+
+            <button onclick="publishAnnouncement()" class="w-full bg-gradient-to-r from-amber-600 to-orange-600 text-white py-4 rounded-xl font-black text-xs uppercase shadow-lg hover:scale-[1.02] transition-transform">Yayınla</button>
+        </div>
+    </div>
+
     <!-- Toast -->
     <div id="toast" class="hidden">
         <span class="text-3xl"></span>
@@ -705,6 +728,11 @@
             <!-- Üst Menü -->
             <div class="flex flex-wrap justify-center gap-3 md:gap-6 mb-8 px-2">
                 <button onclick="openMapModal()" class="text-[10px] font-bold text-slate-500 hover:text-white transition-colors uppercase tracking-widest flex items-center gap-1"><span>🗺️</span> Harita</button>
+            </div>
+
+            <!-- ANA EKRAN DUYURU ALANI -->
+            <div id="home-announcements-container" class="max-w-4xl mx-auto mb-8 hidden">
+                <!-- JS ile doldurulacak -->
             </div>
 
             <h1 class="text-4xl sm:text-5xl md:text-7xl font-black text-white mb-4 uppercase tracking-tighter">KPSS <span class="text-blue-500">Asistanım</span></h1>
@@ -1255,7 +1283,7 @@
             <div class="p-4 border-b border-white/5 bg-[#0a0f1c] flex justify-between items-center shrink-0">
                 <h3 class="text-lg font-black text-white uppercase tracking-tight flex items-center gap-2"><span class="text-blue-400 text-2xl">💬</span> KPSS Sohbet Odası</h3>
                 <div id="admin-controls" class="hidden flex gap-2">
-                    <button onclick="sendAnnouncement()" class="bg-amber-600 text-white px-3 py-1 rounded-lg text-[10px] font-bold uppercase hover:bg-amber-500 transition-colors">📢 Duyuru</button>
+                    <button onclick="openCreateAnnouncementModal()" class="bg-amber-600 text-white px-3 py-1 rounded-lg text-[10px] font-bold uppercase hover:bg-amber-500 transition-colors">📢 Duyuru</button>
                 </div>
                 <button onclick="openChatRulesModal()" class="text-slate-500 hover:text-white transition-colors p-2" title="Topluluk Kuralları">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -3147,7 +3175,7 @@
                     
                     // Admin Kontrolü (Mesajı atan kişi admin mi?)
                     const isMsgFromAdmin = ADMIN_EMAILS.includes(msg.email);
-                    const adminBadge = isMsgFromAdmin ? '<span class="chat-badge-admin">YÖNETİCİ</span>' : '';
+                    const adminBadge = isMsgFromAdmin ? '<span class="chat-badge-admin">👑 YÖNETİCİ</span>' : '';
                     
                     // Silme Butonu (Giriş yapan kişi adminse veya kendi mesajıysa)
                     const canDelete = isAdmin() || isMine; 
@@ -3163,7 +3191,7 @@
                         `;
                     } else {
                         container.innerHTML += `
-                            <div class="chat-message ${isMine ? 'mine' : ''}">
+                            <div class="chat-message ${isMine ? 'mine' : ''} ${isMsgFromAdmin ? 'admin' : ''}">
                                 <img src="${avatar}" class="w-8 h-8 rounded-full object-cover border border-white/10 shadow-sm shrink-0">
                                 <div class="flex flex-col ${isMine ? 'items-end' : 'items-start'} max-w-[80%]">
                                     <div class="chat-info">${msg.displayName} ${adminBadge} • ${time} ${deleteBtn}</div>
@@ -3244,23 +3272,61 @@
             }
         }
 
-        // YENİ: Duyuru Gönderme
-        async function sendAnnouncement() {
-            const text = prompt("Duyuru mesajınızı yazın:");
+        // YENİ: Duyuru Modal Fonksiyonları
+        function openCreateAnnouncementModal() {
+            document.getElementById('create-announcement-modal').classList.remove('hidden');
+        }
+
+        function closeCreateAnnouncementModal() {
+            document.getElementById('create-announcement-modal').classList.add('hidden');
+        }
+
+        async function publishAnnouncement() {
+            const text = document.getElementById('announcement-text').value.trim();
+            const toChat = document.getElementById('target-chat').checked;
+            const toHome = document.getElementById('target-home').checked;
+
             if (!text) return;
+            if (!toChat && !toHome) return alert("Lütfen en az bir yayınlama yeri seçin.");
             
             try {
-                await db.collection('public_chat').add({
-                    text: text,
+                const batch = db.batch();
+                const timestamp = firebase.firestore.FieldValue.serverTimestamp();
+                const userData = {
                     uid: auth.currentUser.uid,
                     email: auth.currentUser.email,
                     displayName: auth.currentUser.displayName || 'YÖNETİCİ',
-                    photoURL: auth.currentUser.photoURL,
-                    type: 'announcement', // Özel tip
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
+                    photoURL: auth.currentUser.photoURL
+                };
+
+                if (toChat) {
+                    const chatRef = db.collection('public_chat').doc();
+                    batch.set(chatRef, {
+                        ...userData,
+                        text: text,
+                        type: 'announcement',
+                        createdAt: timestamp
+                    });
+                }
+
+                if (toHome) {
+                    const homeRef = db.collection('announcements').doc();
+                    batch.set(homeRef, {
+                        ...userData,
+                        text: text,
+                        createdAt: timestamp
+                    });
+                }
+
+                await batch.commit();
+                
+                document.getElementById('announcement-text').value = '';
+                closeCreateAnnouncementModal();
+                alert("Duyuru başarıyla yayınlandı!");
+
             } catch (error) {
-                alert("Duyuru gönderilemedi: " + error.message);
+                console.error(error);
+                alert("Hata: " + error.message);
             }
         }
 
@@ -3275,6 +3341,32 @@
 
         function closeAnnouncementModal() {
             document.getElementById('announcement-modal').classList.add('hidden');
+        }
+
+        // YENİ: Ana Ekran Duyurularını Dinle
+        function initHomeAnnouncements() {
+            const container = document.getElementById('home-announcements-container');
+            // Son 1 duyuruyu getir
+            db.collection('announcements').orderBy('createdAt', 'desc').limit(1)
+                .onSnapshot(snapshot => {
+                    if (snapshot.empty) {
+                        container.classList.add('hidden');
+                        return;
+                    }
+                    
+                    const data = snapshot.docs[0].data();
+                    container.innerHTML = `
+                        <div class="bg-gradient-to-r from-amber-600 to-orange-600 rounded-2xl p-6 shadow-lg relative overflow-hidden flex items-center gap-4 animate-pulse">
+                            <div class="text-4xl">📢</div>
+                            <div class="flex-1">
+                                <h4 class="text-white font-black uppercase text-sm mb-1">YÖNETİCİ DUYURUSU</h4>
+                                <p class="text-white font-medium text-xs leading-relaxed">${data.text}</p>
+                            </div>
+                            <button onclick="this.parentElement.remove()" class="text-white/50 hover:text-white">✕</button>
+                        </div>
+                    `;
+                    container.classList.remove('hidden');
+                });
         }
 
         // --- YENİ: POMODORO İSTATİSTİK FONKSİYONLARI ---
@@ -3700,6 +3792,7 @@
             showAnnouncementModal(); // Duyuru modalını göster
             setInterval(updateLiveMotivation, 30000);
             setInterval(updateCountdown, 1000); // Saniyede bir güncelle
+            if(db) initHomeAnnouncements(); // Ana ekran duyurularını başlat
         }
     </script>
 </body>
