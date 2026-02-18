@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KPSS +90 PUAN HAFTALIK TAKIP</title>
+    <title>KPSS ASİSTANIM</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
@@ -282,6 +282,33 @@
         
         .map-title { font-weight: 800; font-size: 13px; color: #fff; text-transform: uppercase; margin-bottom: 2px; }
         .map-desc { font-size: 10px; font-weight: 600; color: #94a3b8; }
+
+        /* YENİ: Sohbet Stilleri */
+        .chat-message { display: flex; gap: 10px; margin-bottom: 12px; align-items: flex-end; animation: fadeIn 0.3s ease; }
+        .chat-message.mine { flex-direction: row-reverse; }
+        .chat-bubble { max-width: 75%; padding: 10px 14px; border-radius: 16px; font-size: 13px; line-height: 1.4; position: relative; word-wrap: break-word; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .chat-message.mine .chat-bubble { background: var(--osym-accent); color: white; border-bottom-right-radius: 2px; }
+        .chat-message:not(.mine) .chat-bubble { background: rgba(255,255,255,0.1); color: #e2e8f0; border-bottom-left-radius: 2px; }
+        .chat-info { font-size: 9px; color: #64748b; margin-bottom: 4px; font-weight: bold; }
+        .chat-message.mine .chat-info { text-align: right; }
+
+        /* YENİ: Alt Menü ve Sayfa Yapısı */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(12px); border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-around; padding: 10px 0 20px 0; z-index: 9000; box-shadow: 0 -10px 40px rgba(0,0,0,0.5); }
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: #64748b; font-size: 10px; font-weight: 700; text-transform: uppercase; transition: all 0.3s ease; background: none; border: none; cursor: pointer; width: 20%; }
+        .nav-item svg { width: 24px; height: 24px; fill: currentColor; transition: all 0.3s ease; }
+        .nav-item.active { color: var(--osym-accent); }
+        .nav-item.active svg { transform: translateY(-5px); filter: drop-shadow(0 4px 8px var(--osym-accent)); }
+        
+        .page-content { display: none; padding-bottom: 100px; animation: fadeInPage 0.4s ease forwards; }
+        .page-content.active { display: block; }
+        
+        @keyframes fadeInPage {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Mobilde alt barın içeriği kapatmaması için body padding */
+        body { padding-bottom: 80px; }
 
         @keyframes pulse-node { 0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); } 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); } }
         
@@ -602,207 +629,6 @@
         <button onclick="stopBreathing()" class="bg-slate-800 text-white px-8 py-3 rounded-full font-bold text-xs border border-white/10 hover:bg-red-900/50 transition-colors uppercase">Egzersizi Bitir</button>
     </div>
 
-    <!-- AUTH MODAL (YENİ: GİRİŞ / ÜYE OL) -->
-    <div id="auth-modal" class="fixed inset-0 bg-black/90 z-[10060] hidden flex items-center justify-center backdrop-blur-sm transition-all duration-300">
-        <div class="bg-[#161e31] border border-blue-500/30 p-8 rounded-3xl max-w-sm w-full text-center shadow-2xl relative">
-            <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-slate-500 hover:text-white transition-colors text-xl">✕</button>
-            
-            <h3 class="text-2xl font-black text-white mb-6 uppercase tracking-tight">Hesap İşlemleri</h3>
-
-            <!-- Sekmeler -->
-            <div class="flex border-b border-white/10 mb-6">
-                <button onclick="document.getElementById('form-login').classList.remove('hidden'); document.getElementById('form-register').classList.add('hidden'); this.classList.add('text-blue-500', 'border-blue-500'); this.nextElementSibling.classList.remove('text-blue-500', 'border-blue-500'); this.nextElementSibling.classList.add('text-slate-500', 'border-transparent');" class="flex-1 pb-2 text-sm font-bold text-blue-500 border-b-2 border-blue-500 transition-colors">Giriş Yap</button>
-                <button onclick="document.getElementById('form-login').classList.add('hidden'); document.getElementById('form-register').classList.remove('hidden'); this.classList.add('text-blue-500', 'border-blue-500'); this.previousElementSibling.classList.remove('text-blue-500', 'border-blue-500'); this.previousElementSibling.classList.add('text-slate-500', 'border-transparent');" class="flex-1 pb-2 text-sm font-bold text-slate-500 border-b-2 border-transparent hover:text-slate-300 transition-colors">Üye Ol</button>
-            </div>
-
-            <!-- Giriş Formu -->
-            <div id="form-login" class="flex flex-col gap-4">
-                <input type="email" id="login-email" placeholder="E-posta Adresi" class="bg-[#0a0f1c] border border-white/10 rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-blue-500 transition-colors">
-                <input type="password" id="login-password" placeholder="Şifre" class="bg-[#0a0f1c] border border-white/10 rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-blue-500 transition-colors">
-                <button onclick="handleEmailLogin()" class="bg-blue-600 text-white py-3 rounded-xl font-bold text-xs uppercase shadow-lg hover:bg-blue-500 transition-all">Giriş Yap</button>
-                
-                <div class="flex items-center gap-2 my-2">
-                    <div class="h-px bg-white/10 flex-1"></div>
-                    <span class="text-[10px] text-slate-500 uppercase">veya</span>
-                    <div class="h-px bg-white/10 flex-1"></div>
-                </div>
-
-                <button onclick="handleGoogleLogin()" class="bg-white text-slate-900 py-3 rounded-xl font-bold text-xs uppercase shadow-lg hover:bg-slate-200 transition-all flex items-center justify-center gap-2">
-                    <span class="text-lg">G</span> Google ile Giriş
-                </button>
-            </div>
-
-            <!-- Kayıt Formu -->
-            <div id="form-register" class="flex flex-col gap-4 hidden">
-                <input type="text" id="reg-name" placeholder="Ad Soyad (Sertifika İçin)" class="bg-[#0a0f1c] border border-white/10 rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-blue-500 transition-colors">
-                <input type="email" id="reg-email" placeholder="E-posta Adresi" class="bg-[#0a0f1c] border border-white/10 rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-blue-500 transition-colors">
-                <input type="password" id="reg-password" placeholder="Şifre (En az 6 karakter)" class="bg-[#0a0f1c] border border-white/10 rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-blue-500 transition-colors">
-                <button onclick="handleEmailRegister()" class="bg-emerald-600 text-white py-3 rounded-xl font-bold text-xs uppercase shadow-lg hover:bg-emerald-500 transition-all">Kayıt Ol</button>
-            </div>
-
-        </div>
-    </div>
-
-    <!-- YENİ: GELİŞMİŞ GİRİŞ / HESAP MODALI -->
-    <div id="auth-selection-modal" class="fixed inset-0 bg-black/90 z-[10060] hidden flex items-center justify-center backdrop-blur-md transition-all duration-300">
-        <div class="bg-[#161e31] border border-white/10 p-8 rounded-[2rem] max-w-sm w-full text-center shadow-2xl relative overflow-hidden group">
-            <!-- Dekoratif Arka Plan -->
-            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-amber-500"></div>
-            <div class="absolute -top-10 -right-10 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl group-hover:bg-blue-500/20 transition-all"></div>
-            
-            <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-slate-500 hover:text-white transition-colors text-xl z-10">✕</button>
-
-            <!-- LOGO / İKON -->
-            <div class="w-20 h-20 bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border border-white/5 flex items-center justify-center mx-auto mb-6 shadow-lg">
-                <span class="text-4xl">🔐</span>
-            </div>
-
-            <!-- BAŞLIK -->
-            <h3 id="auth-modal-title" class="text-2xl font-black text-white mb-2 uppercase tracking-tight">Aramıza Katıl</h3>
-            <p id="auth-modal-desc" class="text-slate-400 text-xs font-medium leading-relaxed mb-8">
-                İlerlemeni kaydetmek, rozet kazanmak ve sıralamaya girmek için giriş yap.
-            </p>
-
-            <!-- GİRİŞ SEÇENEKLERİ (Giriş Yapılmamışsa) -->
-            <div id="auth-options" class="flex flex-col gap-3">
-                <button onclick="handleGoogleLogin()" class="relative w-full bg-white hover:bg-slate-100 text-slate-900 py-4 rounded-xl font-bold text-sm uppercase shadow-lg transition-all flex items-center justify-center gap-3 group/btn">
-                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5" alt="Google">
-                    <span>Google ile Devam Et</span>
-                    <span class="absolute right-4 opacity-0 group-hover/btn:opacity-100 transition-opacity">→</span>
-                </button>
-
-                <button disabled class="w-full bg-slate-800/50 border border-white/5 text-slate-500 py-4 rounded-xl font-bold text-sm uppercase cursor-not-allowed flex items-center justify-center gap-3 relative overflow-hidden">
-                    <span>📱 Telefon Numarası</span>
-                    <span class="absolute top-2 right-2 bg-slate-700 text-[8px] text-white px-1.5 py-0.5 rounded-md">YAKINDA</span>
-                </button>
-            </div>
-
-            <!-- PROFİL SEÇENEKLERİ (Giriş Yapılmışsa) -->
-            <div id="profile-options" class="hidden flex-col gap-3">
-                <div class="bg-slate-800/50 rounded-xl p-4 mb-2 border border-white/5">
-                    <p class="text-slate-400 text-xs uppercase font-bold mb-1">Giriş Yapılan Hesap</p>
-                    <p id="auth-current-user" class="text-white font-bold text-sm">kullanici@gmail.com</p>
-                </div>
-                
-                <div class="bg-slate-800/50 rounded-xl p-4 mb-2 border border-white/5">
-                    <p class="text-slate-400 text-xs uppercase font-bold mb-2">Sıralama İsmi (Nick)</p>
-                    <div class="flex gap-2">
-                        <input type="text" id="custom-username-input" class="flex-1 bg-slate-900 border border-white/10 rounded-lg px-3 py-2 text-white text-sm font-bold outline-none focus:border-blue-500 transition-colors" placeholder="Ad Soyad">
-                        <button onclick="saveCustomUsername()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-bold text-xs uppercase transition-colors shadow-lg">Kaydet</button>
-                    </div>
-                </div>
-
-                <button onclick="handleGoogleLogin()" class="w-full bg-red-600/90 hover:bg-red-600 text-white py-4 rounded-xl font-bold text-sm uppercase shadow-lg shadow-red-900/20 transition-all">Çıkış Yap</button>
-            </div>
-
-            <p class="mt-6 text-[10px] text-slate-600">
-                Giriş yaparak <button onclick="openTermsModal()" class="text-slate-500 underline hover:text-blue-400 transition-colors">Kullanım Koşulları</button>'nı kabul etmiş olursun.
-            </p>
-        </div>
-    </div>
-
-    <!-- HELP MODAL (YENİ: KULLANIM REHBERİ) -->
-    <div id="help-modal" class="fixed inset-0 bg-[#0a0f1c]/95 z-[10020] hidden flex flex-col items-center justify-center backdrop-blur-md p-4 overflow-y-auto">
-        <div class="bg-[var(--osym-card)] border border-white/10 p-8 rounded-3xl max-w-2xl w-full shadow-2xl relative">
-            <button onclick="closeHelpModal()" class="absolute top-4 right-4 text-slate-500 hover:text-white transition-colors text-xl">✕</button>
-            <h2 class="text-2xl font-black text-white mb-6 uppercase tracking-tight flex items-center gap-3">
-                <span class="text-3xl">📖</span> Site Kullanım Rehberi
-            </h2>
-            
-            <div class="space-y-5 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
-                <div>
-                    <h3 class="text-blue-400 font-bold text-sm uppercase mb-1">1. Geri Sayım Sayacı</h3>
-                    <p class="text-slate-400 text-xs leading-relaxed">Sınav tarihlerine (Lisans, Önlisans, Ortaöğretim) kalan zamanı gün, saat, dakika ve saniye olarak gösterir.</p>
-                </div>
-                <div>
-                    <h3 class="text-amber-400 font-bold text-sm uppercase mb-1">2. Oyunlaştırma (Seviye & Rozetler)</h3>
-                    <p class="text-slate-400 text-xs leading-relaxed">Ders çalışma sürecini bir oyuna dönüştürür. Yaptığın her aktivite (ders bitirme, soru çözme, pomodoro tamamlama vb.) sana tecrübe puanı (XP) kazandırır. Yeterli XP ile seviye atlar, yeni rütbeler ve başarı rozetleri kazanırsın.</p>
-                </div>
-                <div>
-                    <h3 class="text-blue-400 font-bold text-sm uppercase mb-1">3. Atama Odağı (Pomodoro)</h3>
-                    <p class="text-slate-400 text-xs leading-relaxed">Zamanı yönetmeni sağlar (25dk Ders / 5dk Mola). Ayrıca "Bugün kaç oturum yaptın, kaç dakika odaklandın?" istatistiklerini tutar.</p>
-                </div>
-                <div>
-                    <h3 class="text-cyan-400 font-bold text-sm uppercase mb-1">4. Nefes Egzersizi</h3>
-                    <p class="text-slate-400 text-xs leading-relaxed">Streslendiğinde veya odaklanamadığında açıp, ekrandaki talimatla nefes alıp vererek sakinleşmeni sağlar.</p>
-                </div>
-                <div>
-                    <h3 class="text-blue-400 font-bold text-sm uppercase mb-1">5. Ders Programı & Sertifika</h3>
-                    <p class="text-slate-400 text-xs leading-relaxed">Haftalık ve günlük olarak yapılandırılmış çalışma planını takip et. Dersleri tamamladıkça kutucukları işaretleyerek genel ilerlemeni gör ve %100'e ulaştığında ismine özel <strong>Başarı Sertifikası</strong> almaya hak kazanırsın.</p>
-                </div>
-                <div>
-                    <h3 class="text-amber-400 font-bold text-sm uppercase mb-1">6. Deneme Takibi</h3>
-                    <p class="text-slate-400 text-xs leading-relaxed">Deneme netlerini girerek tahmini puanını hesaplar. Sonuçlarını liste ve <strong>Grafik</strong> üzerinde analiz etmeni sağlar.</p>
-                </div>
-                <div>
-                    <h3 class="text-purple-400 font-bold text-sm uppercase mb-1">7. Günlük Performans & Soru Hedefi</h3>
-                    <p class="text-slate-400 text-xs leading-relaxed">Kendine günlük bir soru çözme hedefi (örn: 200 soru) koyarsın. Çözdükçe sisteme girersin. Hedefe ulaştığında sistem seni kutlar.</p>
-                </div>
-                <div>
-                    <h3 class="text-rose-400 font-bold text-sm uppercase mb-1">8. Zinciri Kırma (Streak) Mantığı</h3>
-                    <p class="text-slate-400 text-xs leading-relaxed">Bu özellik disiplinini ölçer. Eğer o günkü "Soru Hedefine" ulaşırsan, takvimdeki o gün yeşil olur. Amacın, hiç boş gün bırakmadan (zinciri koparmadan) her gün hedefini tutturmaktır.</p>
-                </div>
-                <div>
-                    <h3 class="text-pink-500 font-bold text-sm uppercase mb-1">9. Hap Bilgiler (Ezber Kartları)</h3>
-                    <p class="text-slate-400 text-xs leading-relaxed">Tarih, Coğrafya ve Vatandaşlık dersleri için pratik yapmanı sağlar. Karta tıkla, cevabı gör, "Sıradaki" diyerek yeni bilgiye geç.</p>
-                </div>
-                 <div>
-                    <h3 class="text-orange-400 font-bold text-sm uppercase mb-1">Ek Uyarı</h3>
-                    <p class="text-slate-400 text-xs leading-relaxed">Bu site ÖSYM ile ilişkili değildir. Kişisel çalışma takibi için yapılmıştır.</p>
-                </div>
-            </div>
-
-            <button onclick="closeHelpModal()" class="w-full bg-blue-600 text-white py-4 rounded-xl font-black text-xs uppercase mt-6 hover:bg-blue-500 transition-all">Anlaşıldı, Başlayalım! 🚀</button>
-        </div>
-    </div>
-
-    <!-- TERMS MODAL (YENİ: KULLANIM KOŞULLARI) -->
-    <div id="terms-modal" class="fixed inset-0 bg-black/95 z-[10080] hidden flex flex-col items-center justify-center backdrop-blur-md p-4">
-        <div class="bg-[#161e31] border border-white/10 p-8 rounded-3xl max-w-2xl w-full shadow-2xl relative max-h-[80vh] flex flex-col">
-            <button onclick="closeTermsModal()" class="absolute top-4 right-4 text-slate-500 hover:text-white transition-colors text-xl">✕</button>
-            <h2 class="text-2xl font-black text-white mb-6 uppercase tracking-tight flex items-center gap-3">
-                <span class="text-3xl">📜</span> Kullanım Koşulları
-            </h2>
-            
-            <div class="space-y-4 overflow-y-auto custom-scrollbar pr-2 text-left">
-                <div>
-                    <h3 class="text-blue-400 font-bold text-sm uppercase mb-1">1. Hizmetin Tanımı</h3>
-                    <p class="text-slate-400 text-xs leading-relaxed">KPSS Asistanım, adayların ders çalışma süreçlerini, deneme sonuçlarını ve motivasyonlarını takip etmeleri amacıyla geliştirilmiş ücretsiz ve kişisel bir araçtır.</p>
-                </div>
-                <div>
-                    <h3 class="text-amber-400 font-bold text-sm uppercase mb-1">2. Veri Gizliliği ve Güvenliği</h3>
-                    <p class="text-slate-400 text-xs leading-relaxed">Uygulama üzerindeki verileriniz (ilerleme durumu, notlar, deneme sonuçları vb.) Google Firebase altyapısında ve cihazınızın yerel hafızasında (localStorage) saklanmaktadır. Kişisel verileriniz reklam veya pazarlama amacıyla üçüncü taraflarla paylaşılmaz.</p>
-                </div>
-                <div>
-                    <h3 class="text-red-400 font-bold text-sm uppercase mb-1">3. Sorumluluk Reddi</h3>
-                    <p class="text-slate-400 text-xs leading-relaxed">Bu uygulama "olduğu gibi" sunulmaktadır. Yazılım hataları, veri kayıpları veya hizmet kesintilerinden doğabilecek mağduriyetlerden geliştirici sorumlu tutulamaz. Bu site ÖSYM veya herhangi bir resmi kurumla ilişkili değildir.</p>
-                </div>
-                <div>
-                    <h3 class="text-emerald-400 font-bold text-sm uppercase mb-1">4. Hesap Sorumluluğu</h3>
-                    <p class="text-slate-400 text-xs leading-relaxed">Google ile giriş yaparak oluşturduğunuz hesabın güvenliği sizin sorumluluğunuzdadır. Ortak kullanılan cihazlarda işiniz bittiğinde "Çıkış Yap" butonunu kullanmanız önerilir.</p>
-                </div>
-            </div>
-
-            <button onclick="closeTermsModal()" class="w-full bg-slate-800 text-white py-4 rounded-xl font-bold text-xs uppercase mt-6 hover:bg-slate-700 transition-all border border-white/5">Okudum, Anladım</button>
-        </div>
-    </div>
-
-    <!-- YENİ: LİDERLİK TABLOSU MODALI -->
-    <div id="leaderboard-modal" class="fixed inset-0 bg-black/95 z-[10085] hidden flex flex-col items-center justify-center backdrop-blur-md p-4">
-        <div class="bg-[#161e31] border border-amber-500/20 p-6 md:p-8 rounded-3xl max-w-2xl w-full shadow-2xl relative max-h-[80vh] flex flex-col">
-            <button onclick="closeLeaderboardModal()" class="absolute top-4 right-4 text-slate-500 hover:text-white transition-colors text-xl z-10">✕</button>
-            <h2 class="text-2xl font-black text-white mb-6 uppercase tracking-tight flex items-center gap-3">
-                <span class="text-3xl text-amber-400">🏆</span> Liderlik Tablosu
-            </h2>
-            
-            <div id="leaderboard-list" class="space-y-2 overflow-y-auto custom-scrollbar pr-2 text-left">
-                <!-- JS ile doldurulacak -->
-                <div class="text-center text-slate-500 py-10">Yükleniyor...</div>
-            </div>
-            <p class="text-[10px] text-slate-600 mt-4 text-center">En yüksek XP puanına sahip ilk 10 kullanıcı gösterilir.</p>
-        </div>
-    </div>
-
     <!-- ANNOUNCEMENT MODAL (YENİ: DUYURU / BETA UYARISI) -->
     <div id="announcement-modal" class="fixed inset-0 bg-black/90 z-[10090] hidden flex items-center justify-center backdrop-blur-sm transition-all duration-300">
         <div class="bg-gradient-to-br from-blue-900/90 to-slate-900/90 border border-blue-500/30 p-8 rounded-3xl max-w-md w-full text-center shadow-2xl relative overflow-hidden">
@@ -844,17 +670,14 @@
         <span class="text-xs text-slate-400" id="xp-toast-reason">Pomodoro Tamamlandı</span>
     </div>
 
-    <div class="max-w-6xl mx-auto p-4 md:p-8">
+    <!-- ANA SAYFA İÇERİĞİ -->
+    <div id="page-home" class="page-content active max-w-6xl mx-auto p-4 md:p-8">
         <header class="text-center mb-12">
             <div class="inline-block px-5 py-2 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-black tracking-widest uppercase mb-6 animate-pulse">KPSS Dashboard v7.0</div>
             
             <!-- Üst Menü -->
             <div class="flex flex-wrap justify-center gap-3 md:gap-6 mb-8 px-2">
-                <button onclick="openHelpModal()" class="text-[10px] font-bold text-slate-500 hover:text-white transition-colors uppercase tracking-widest flex items-center gap-1"><span>❓</span> Nasıl Kullanılır?</button>
-                <button onclick="document.getElementById('theme-modal').classList.remove('hidden')" class="text-[10px] font-bold text-slate-500 hover:text-white transition-colors uppercase tracking-widest flex items-center gap-1"><span>🎨</span> Temalar</button>
                 <button onclick="openMapModal()" class="text-[10px] font-bold text-slate-500 hover:text-white transition-colors uppercase tracking-widest flex items-center gap-1"><span>🗺️</span> Harita</button>
-                <button onclick="openLeaderboardModal()" class="text-[10px] font-bold text-slate-500 hover:text-white transition-colors uppercase tracking-widest flex items-center gap-1"><span>🏆</span> Liderlik</button>
-                <button onclick="openAuthModal()" class="text-[10px] font-bold text-slate-500 hover:text-white transition-colors uppercase tracking-widest flex items-center gap-1"><span>👤</span> <span id="login-btn-text">Giriş Yap</span></button>
             </div>
 
             <h1 class="text-4xl sm:text-5xl md:text-7xl font-black text-white mb-4 uppercase tracking-tighter">KPSS  <span class="text-blue-500">ASİSTANIM</span></h1>
@@ -1386,6 +1209,169 @@
 
     </div>
 
+    <!-- LİDERLİK SAYFASI -->
+    <div id="page-leaderboard" class="page-content max-w-2xl mx-auto p-4 md:p-8">
+        <div class="bg-[#161e31] border border-amber-500/20 p-6 md:p-8 rounded-3xl w-full shadow-2xl relative flex flex-col h-[80vh]">
+            <h2 class="text-2xl font-black text-white mb-6 uppercase tracking-tight flex items-center gap-3">
+                <span class="text-3xl text-amber-400">🏆</span> Liderlik Tablosu
+            </h2>
+            <div id="leaderboard-list" class="space-y-2 overflow-y-auto custom-scrollbar pr-2 text-left flex-1">
+                <div class="text-center text-slate-500 py-10">Yükleniyor...</div>
+            </div>
+            <p class="text-[10px] text-slate-600 mt-4 text-center">En yüksek XP puanına sahip ilk 10 kullanıcı gösterilir.</p>
+        </div>
+    </div>
+
+    <!-- SOHBET SAYFASI -->
+    <div id="page-chat" class="page-content max-w-md mx-auto p-4 md:p-8">
+        <div class="bg-[#161e31] border border-blue-500/20 rounded-3xl w-full h-[80vh] shadow-2xl relative flex flex-col overflow-hidden">
+            <div class="p-4 border-b border-white/5 bg-[#0a0f1c] flex justify-between items-center shrink-0">
+                <h3 class="text-lg font-black text-white uppercase tracking-tight flex items-center gap-2"><span class="text-blue-400 text-2xl">💬</span> KPSS Sohbet Odası</h3>
+            </div>
+            <div id="chat-messages" class="flex-1 overflow-y-auto custom-scrollbar p-4 bg-[#0f172a]/50 flex flex-col">
+                <div class="text-center text-slate-500 text-xs py-10">Sohbet yükleniyor...</div>
+            </div>
+            <div class="p-3 bg-[#0a0f1c] border-t border-white/5 flex gap-2 shrink-0">
+                <input type="text" id="chat-input" class="flex-1 bg-slate-800/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-blue-500 transition-colors placeholder:text-slate-600" placeholder="Bir şeyler yaz..." onkeypress="if(event.key === 'Enter') sendMessage()">
+                <button onclick="sendMessage()" class="bg-blue-600 text-white w-12 rounded-xl hover:bg-blue-500 transition-colors shadow-lg flex items-center justify-center text-lg">➤</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PROFİL SAYFASI -->
+    <div id="page-profile" class="page-content max-w-md mx-auto p-4 md:p-8">
+        <div class="bg-[#161e31] border border-white/10 p-8 rounded-[2rem] w-full text-center shadow-2xl relative overflow-hidden group">
+            <!-- Dekoratif Arka Plan -->
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-amber-500"></div>
+            
+            <!-- LOGO / İKON -->
+            <div class="w-20 h-20 bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border border-white/5 flex items-center justify-center mx-auto mb-6 shadow-lg">
+                <span class="text-4xl">👤</span>
+            </div>
+
+            <!-- BAŞLIK -->
+            <h3 id="auth-modal-title" class="text-2xl font-black text-white mb-2 uppercase tracking-tight">Profilim</h3>
+            <p id="auth-modal-desc" class="text-slate-400 text-xs font-medium leading-relaxed mb-8">
+                Hesap ayarlarını buradan yönetebilirsin.
+            </p>
+
+            <!-- GİRİŞ SEÇENEKLERİ (Giriş Yapılmamışsa) -->
+            <div id="auth-options" class="flex flex-col gap-3">
+                <button onclick="handleGoogleLogin()" class="relative w-full bg-white hover:bg-slate-100 text-slate-900 py-4 rounded-xl font-bold text-sm uppercase shadow-lg transition-all flex items-center justify-center gap-3 group/btn">
+                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5" alt="Google">
+                    <span>Google ile Giriş Yap</span>
+                </button>
+                
+                <div class="flex items-center gap-2 my-2">
+                    <div class="h-px bg-white/10 flex-1"></div>
+                    <span class="text-[10px] text-slate-500 uppercase">veya E-posta</span>
+                    <div class="h-px bg-white/10 flex-1"></div>
+                </div>
+
+                <div class="flex flex-col gap-2">
+                    <input type="email" id="login-email" placeholder="E-posta" class="bg-[#0a0f1c] border border-white/10 rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-blue-500 transition-colors">
+                    <input type="password" id="login-password" placeholder="Şifre" class="bg-[#0a0f1c] border border-white/10 rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-blue-500 transition-colors">
+                    <button onclick="handleEmailLogin()" class="bg-blue-600 text-white py-3 rounded-xl font-bold text-xs uppercase shadow-lg hover:bg-blue-500 transition-all">Giriş Yap</button>
+                </div>
+            </div>
+
+            <!-- PROFİL SEÇENEKLERİ (Giriş Yapılmışsa) -->
+            <div id="profile-options" class="hidden flex-col gap-3">
+                <div class="bg-slate-800/50 rounded-xl p-4 mb-2 border border-white/5">
+                    <p class="text-slate-400 text-xs uppercase font-bold mb-1">Giriş Yapılan Hesap</p>
+                    <p id="auth-current-user" class="text-white font-bold text-sm">kullanici@gmail.com</p>
+                </div>
+                
+                <div class="bg-slate-800/50 rounded-xl p-4 mb-2 border border-white/5">
+                    <p class="text-slate-400 text-xs uppercase font-bold mb-2">Sıralama İsmi (Nick)</p>
+                    <div class="flex gap-2">
+                        <input type="text" id="custom-username-input" class="flex-1 bg-slate-900 border border-white/10 rounded-lg px-3 py-2 text-white text-sm font-bold outline-none focus:border-blue-500 transition-colors" placeholder="Ad Soyad">
+                        <button onclick="saveCustomUsername()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-bold text-xs uppercase transition-colors shadow-lg">Kaydet</button>
+                    </div>
+                </div>
+
+                <button onclick="document.getElementById('theme-modal').classList.remove('hidden')" class="w-full bg-slate-700 hover:bg-slate-600 text-white py-4 rounded-xl font-bold text-sm uppercase shadow-lg transition-all flex items-center justify-center gap-2">
+                    <span>🎨</span> Tema Değiştir
+                </button>
+
+                <button onclick="openAchievementsModal()" class="w-full bg-amber-600 hover:bg-amber-500 text-white py-4 rounded-xl font-bold text-sm uppercase shadow-lg transition-all flex items-center justify-center gap-2">
+                    <span>🏆</span> Başarımlarımı Gör
+                </button>
+
+                <button onclick="handleGoogleLogin()" class="w-full bg-red-600/90 hover:bg-red-600 text-white py-4 rounded-xl font-bold text-sm uppercase shadow-lg shadow-red-900/20 transition-all mt-4">Çıkış Yap</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- DESTEK SAYFASI -->
+    <div id="page-support" class="page-content max-w-2xl mx-auto p-4 md:p-8">
+        <div class="bg-[var(--osym-card)] border border-white/10 p-8 rounded-3xl w-full shadow-2xl relative">
+            <h2 class="text-2xl font-black text-white mb-6 uppercase tracking-tight flex items-center gap-3">
+                <span class="text-3xl">📖</span> Site Kullanım Rehberi
+            </h2>
+            
+            <div class="space-y-5 mb-8">
+                <div>
+                    <h3 class="text-blue-400 font-bold text-sm uppercase mb-1">1. Geri Sayım Sayacı</h3>
+                    <p class="text-slate-400 text-xs leading-relaxed">Sınav tarihlerine (Lisans, Önlisans, Ortaöğretim) kalan zamanı gün, saat, dakika ve saniye olarak gösterir.</p>
+                </div>
+                <div>
+                    <h3 class="text-amber-400 font-bold text-sm uppercase mb-1">2. Oyunlaştırma (Seviye & Rozetler)</h3>
+                    <p class="text-slate-400 text-xs leading-relaxed">Ders çalışma sürecini bir oyuna dönüştürür. Yaptığın her aktivite (ders bitirme, soru çözme, pomodoro tamamlama vb.) sana tecrübe puanı (XP) kazandırır.</p>
+                </div>
+                <div>
+                    <h3 class="text-blue-400 font-bold text-sm uppercase mb-1">3. Atama Odağı (Pomodoro)</h3>
+                    <p class="text-slate-400 text-xs leading-relaxed">Zamanı yönetmeni sağlar (25dk Ders / 5dk Mola).</p>
+                </div>
+                <div>
+                    <h3 class="text-cyan-400 font-bold text-sm uppercase mb-1">4. Nefes Egzersizi</h3>
+                    <p class="text-slate-400 text-xs leading-relaxed">Streslendiğinde veya odaklanamadığında açıp, ekrandaki talimatla nefes alıp vererek sakinleşmeni sağlar.</p>
+                </div>
+                <div>
+                    <h3 class="text-blue-400 font-bold text-sm uppercase mb-1">5. Ders Programı & Sertifika</h3>
+                    <p class="text-slate-400 text-xs leading-relaxed">Haftalık ve günlük olarak yapılandırılmış çalışma planını takip et. %100'e ulaştığında ismine özel <strong>Başarı Sertifikası</strong> almaya hak kazanırsın.</p>
+                </div>
+            </div>
+
+            <button onclick="openTermsModal()" class="w-full bg-slate-800 text-white py-4 rounded-xl font-bold text-xs uppercase hover:bg-slate-700 transition-all border border-white/5">Kullanım Koşulları</button>
+            
+            <div class="mt-8 text-center border-t border-white/10 pt-8">
+                <div class="mb-4">
+                    <span class="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Geliştirici</span>
+                    <h3 class="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400 drop-shadow-sm">BAŞARAN TechZone</h3>
+                    <a href="https://www.instagram.com/basarantechzone" target="_blank" class="text-blue-500 hover:text-blue-400 text-[10px] font-bold uppercase tracking-widest">instagram.com/basarantechzone</a>
+                </div>
+                <p class="text-[10px] text-slate-600 max-w-lg mx-auto leading-relaxed">
+                    ⚠️ Bu site ÖSYM veya herhangi bir resmi kurumla ilişkili değildir. Tamamen kişisel çalışma takibi amacıyla hazırlanmıştır.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ALT MENÜ (BOTTOM NAV) -->
+    <nav class="bottom-nav">
+        <button class="nav-item active" onclick="switchTab('home')">
+            <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+            <span>Ana Sayfa</span>
+        </button>
+        <button class="nav-item" onclick="switchTab('leaderboard')">
+            <svg viewBox="0 0 24 24"><path d="M16 11V3H8v6H2v12h20V11h-6zm-6-6h4v14h-4V5zm-6 6h4v8H4v-8zm16 8h-4v-6h4v6z"/></svg>
+            <span>Sıralama</span>
+        </button>
+        <button class="nav-item" onclick="switchTab('chat')">
+            <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+            <span>Sohbet</span>
+        </button>
+        <button class="nav-item" onclick="switchTab('profile')">
+            <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            <span>Profil</span>
+        </button>
+        <button class="nav-item" onclick="switchTab('support')">
+            <svg viewBox="0 0 24 24"><path d="M11 18h2v-2h-2v2zm1-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2c0 2-3 1.75-3 5h2c0-2.25 3-2.5 3-5 0-2.21-1.79-4-4-4z"/></svg>
+            <span>Destek</span>
+        </button>
+    </nav>
+
     <script>
         const motivasyonSozleri = [
             "Bugün ektiğin o zor sorular, yarın sınav kağıdında çiçek açacak.",
@@ -1581,6 +1567,32 @@
             }, 2500);
         };
 
+        // YENİ: Sekme Değiştirme Fonksiyonu
+        window.switchTab = (tabId) => {
+            // Tüm sayfaları gizle
+            document.querySelectorAll('.page-content').forEach(el => el.classList.remove('active'));
+            // Seçilen sayfayı göster
+            document.getElementById(`page-${tabId}`).classList.add('active');
+            
+            // Alt menü ikonlarını güncelle
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            // Tıklanan butonu bulmak için basit bir index mantığı veya onclick içinde class ekleme yapılabilir ama
+            // burada onclick'ten gelen event'i yakalamadığımız için manuel index ile yapalım:
+            const tabs = ['home', 'leaderboard', 'chat', 'profile', 'support'];
+            const index = tabs.indexOf(tabId);
+            if (index !== -1) {
+                document.querySelectorAll('.nav-item')[index].classList.add('active');
+            }
+
+            // Sayfa özel yüklemeleri
+            if (tabId === 'leaderboard') openLeaderboardModal();
+            if (tabId === 'chat') openChatModal();
+            if (tabId === 'profile') openAuthModal();
+            
+            // Sayfa başına kaydır
+            window.scrollTo(0, 0);
+        };
+
         // -----------------------------------------------------------------------
         // FIREBASE ENTEGRASYONU (VERİ TABANI & GİRİŞ)
         // -----------------------------------------------------------------------
@@ -1607,7 +1619,7 @@
             auth.onAuthStateChanged(async (user) => {
                 const btnText = document.getElementById('login-btn-text');
                 if (user) {
-                    if(btnText) btnText.innerText = "Hesabım";
+                    // if(btnText) btnText.innerText = "Hesabım"; // Artık alt menüde
                     localStorage.setItem('kpss_user_name', user.displayName);
                     
                     // Verileri Buluttan Çek
@@ -1621,7 +1633,7 @@
                         localStorage.setItem('kpss_welcome_last_shown', now);
                     }
                 } else {
-                    if(btnText) btnText.innerText = "Giriş Yap";
+                    // if(btnText) btnText.innerText = "Giriş Yap"; // Artık alt menüde
                 }
             });
         }
@@ -1698,7 +1710,7 @@
 
         // YENİ: Auth Modal Fonksiyonları
         window.openAuthModal = () => {
-            const modal = document.getElementById('auth-selection-modal');
+            // Artık modal değil, sayfa içi elementleri güncelliyoruz
             const title = document.getElementById('auth-modal-title');
             const desc = document.getElementById('auth-modal-desc');
             const authOptions = document.getElementById('auth-options');
@@ -1725,11 +1737,12 @@
                 profileOptions.classList.add('hidden');
                 profileOptions.classList.remove('flex');
             }
-            modal.classList.remove('hidden');
+            // modal.classList.remove('hidden'); // Artık sayfa geçişi ile yapılıyor
         };
 
         window.closeAuthModal = () => {
-            document.getElementById('auth-selection-modal').classList.add('hidden');
+            // document.getElementById('auth-selection-modal').classList.add('hidden');
+            switchTab('home'); // Kapatınca ana sayfaya dön
         };
 
         // YENİ: Kullanıcı Adı Kaydetme
@@ -2929,15 +2942,6 @@
             document.getElementById('daily-goal-modal').classList.add('hidden');
         }
 
-        // --- YENİ: YARDIM MODALI FONKSİYONLARI ---
-        function openHelpModal() {
-            document.getElementById('help-modal').classList.remove('hidden');
-        }
-
-        function closeHelpModal() {
-            document.getElementById('help-modal').classList.add('hidden');
-        }
-
         // YENİ: Kullanım Koşulları Modal Fonksiyonları
         function openTermsModal() {
             document.getElementById('terms-modal').classList.remove('hidden');
@@ -2949,13 +2953,13 @@
 
         // YENİ: Liderlik Tablosu Fonksiyonları
         async function openLeaderboardModal() {
-            if (!auth || !auth.currentUser) {
-                openAuthModal(); // Giriş yapmamışsa giriş ekranını aç
-                return;
-            }
-            const modal = document.getElementById('leaderboard-modal');
+            // if (!auth || !auth.currentUser) {
+            //     switchTab('profile'); // Giriş yapmamışsa profile yönlendir
+            //     return;
+            // }
+            // const modal = document.getElementById('leaderboard-modal'); // Artık sayfa
             const list = document.getElementById('leaderboard-list');
-            modal.classList.remove('hidden');
+            // modal.classList.remove('hidden');
             list.innerHTML = '<div class="text-center text-slate-500 py-10 animate-pulse">Liderler yükleniyor...</div>';
 
             try {
@@ -2995,7 +2999,88 @@
         }
 
         function closeLeaderboardModal() {
-            document.getElementById('leaderboard-modal').classList.add('hidden');
+            // document.getElementById('leaderboard-modal').classList.add('hidden');
+            switchTab('home');
+        }
+
+        // YENİ: Sohbet Fonksiyonları
+        let chatUnsubscribe = null;
+
+        function openChatModal() {
+            if (!auth || !auth.currentUser) {
+                // switchTab('profile'); // Giriş yapmamışsa profile yönlendir
+                document.getElementById('chat-messages').innerHTML = '<div class="text-center text-slate-500 text-xs py-10">Sohbeti görmek için lütfen giriş yapın.</div>';
+                return;
+            }
+            // document.getElementById('chat-modal').classList.remove('hidden');
+            loadMessages();
+        }
+
+        function closeChatModal() {
+            // document.getElementById('chat-modal').classList.add('hidden');
+            if (chatUnsubscribe) {
+                chatUnsubscribe(); // Dinlemeyi durdur (performans için)
+                chatUnsubscribe = null;
+            }
+            switchTab('home');
+        }
+
+        function loadMessages() {
+            const container = document.getElementById('chat-messages');
+            // Son 50 mesajı tarihe göre sırala
+            const query = db.collection('public_chat').orderBy('createdAt', 'desc').limit(50);
+            
+            chatUnsubscribe = query.onSnapshot(snapshot => {
+                const messages = [];
+                snapshot.forEach(doc => messages.push({ id: doc.id, ...doc.data() }));
+                
+                // Mesajları eskiden yeniye doğru sırala (sohbet akışı için)
+                messages.reverse();
+                
+                container.innerHTML = '';
+                if (messages.length === 0) {
+                    container.innerHTML = '<div class="text-center text-slate-500 text-xs py-10">Henüz mesaj yok. İlk mesajı sen yaz! 👋</div>';
+                }
+
+                messages.forEach(msg => {
+                    const isMine = msg.uid === auth.currentUser.uid;
+                    const time = msg.createdAt ? new Date(msg.createdAt.toDate()).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : '...';
+                    const avatar = msg.photoURL || `https://ui-avatars.com/api/?name=${msg.displayName}&background=random&color=fff&size=64`;
+
+                    container.innerHTML += `
+                        <div class="chat-message ${isMine ? 'mine' : ''}">
+                            <img src="${avatar}" class="w-8 h-8 rounded-full object-cover border border-white/10 shadow-sm shrink-0">
+                            <div class="flex flex-col ${isMine ? 'items-end' : 'items-start'} max-w-[80%]">
+                                <div class="chat-info">${msg.displayName} • ${time}</div>
+                                <div class="chat-bubble">${msg.text}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                // En alta kaydır
+                container.scrollTop = container.scrollHeight;
+            });
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if (!text || !auth.currentUser) return;
+
+            try {
+                await db.collection('public_chat').add({
+                    text: text,
+                    uid: auth.currentUser.uid,
+                    displayName: auth.currentUser.displayName || 'İsimsiz',
+                    photoURL: auth.currentUser.photoURL,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                input.value = '';
+            } catch (error) {
+                console.error("Mesaj gönderme hatası:", error);
+                alert("Mesaj gönderilemedi. Lütfen internet bağlantını kontrol et.");
+            }
         }
 
         // YENİ: Duyuru Modalı Fonksiyonları
