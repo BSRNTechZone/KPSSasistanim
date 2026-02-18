@@ -3170,17 +3170,14 @@
                     } else if (rank === 3) {
                         highlightClass = 'bg-gradient-to-br from-orange-800/20 to-yellow-800/20 border-orange-700/50';
                     } else if (isCurrentUser) {
-                        highlightClass = 'bg-blue-500/10 border-blue-500/50';
-                    }
-                    if (isCurrentUser && rank <= 3) {
-                        highlightClass += ' ring-2 ring-offset-2 ring-offset-[#161e31] ring-blue-400';
+                        highlightClass = 'bg-blue-500/10 border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.15)]';
                     }
 
                     listHtml += `
                         <div class="flex items-center gap-4 p-3 rounded-2xl border ${highlightClass} transition-all shadow-lg">
                             <div class="w-8 text-center font-black text-lg ${rank <= 3 ? 'text-amber-400' : 'text-slate-500'}">${rank}</div>
                             <img src="${avatar}" class="w-10 h-10 rounded-full object-cover border-2 border-slate-700" alt="Avatar">
-                            <div class="flex-1 min-w-0"><p class="font-bold text-sm text-white truncate">${data.displayName || 'İsimsiz Kahraman'} ${medal}</p><p class="text-[10px] text-slate-400 font-bold">${xp.toLocaleString('tr-TR')} XP</p></div>
+                            <div class="flex-1 min-w-0"><p class="font-bold text-sm text-white truncate">${data.displayName || 'İsimsiz Kahraman'} ${isCurrentUser ? '<span class="text-blue-400 text-xs">(Sen)</span>' : ''} ${medal}</p><p class="text-[10px] text-slate-400 font-bold">${xp.toLocaleString('tr-TR')} XP</p></div>
                         </div>
                     `;
                     rank++;
