@@ -3160,14 +3160,26 @@
                     const xp = data.gamificationData ? Math.round(data.gamificationData.xp) : 0;
                     const avatar = data.photoURL || `https://ui-avatars.com/api/?name=${data.displayName}&background=1e293b&color=fff&size=128`;
                     
-                    const isCurrentUser = doc.id === auth.currentUser.uid;
-                    const highlightClass = isCurrentUser ? 'bg-amber-500/10 border-amber-500/50' : 'bg-slate-800/50 border-white/5';
+                    const isCurrentUser = auth.currentUser && doc.id === auth.currentUser.uid;
+                    let highlightClass = 'bg-slate-800/50 border-white/5'; // Varsayılan
+
+                    if (rank === 1) {
+                        highlightClass = 'bg-gradient-to-br from-amber-500/20 to-yellow-600/20 border-amber-500/50';
+                    } else if (rank === 2) {
+                        highlightClass = 'bg-gradient-to-br from-slate-400/20 to-slate-500/20 border-slate-400/50';
+                    } else if (rank === 3) {
+                        highlightClass = 'bg-gradient-to-br from-orange-800/20 to-yellow-800/20 border-orange-700/50';
+                    } else if (isCurrentUser) {
+                        highlightClass = 'bg-blue-500/10 border-blue-500/50';
+                    }
+                    if (isCurrentUser && rank <= 3) {
+                        highlightClass += ' ring-2 ring-offset-2 ring-offset-[#161e31] ring-blue-400';
+                    }
 
                     listHtml += `
-                        <div class="flex items-center gap-4 p-3 rounded-2xl border ${highlightClass} transition-all">
+                        <div class="flex items-center gap-4 p-3 rounded-2xl border ${highlightClass} transition-all shadow-lg">
                             <div class="w-8 text-center font-black text-lg ${rank <= 3 ? 'text-amber-400' : 'text-slate-500'}">${rank}</div>
                             <img src="${avatar}" class="w-10 h-10 rounded-full object-cover border-2 border-slate-700" alt="Avatar">
-                            <div class="flex-1 min-w-0"><p class="font-bold text-sm text-white truncate">${data.displayName || 'İsimsiz Kahraman'}</p><p class="text-[10px] text-slate-400 font-bold">${xp.toLocaleString('tr-TR')} XP</p></div>
                             <div class="flex-1 min-w-0"><p class="font-bold text-sm text-white truncate">${data.displayName || 'İsimsiz Kahraman'} ${medal}</p><p class="text-[10px] text-slate-400 font-bold">${xp.toLocaleString('tr-TR')} XP</p></div>
                         </div>
                     `;
@@ -3288,8 +3300,6 @@
                     } else {
                         container.innerHTML += `
                             <div class="chat-message ${isMine ? 'mine' : ''} ${isMsgFromAdmin ? 'admin' : ''}">
-                                <img src="${avatar}" class="w-8 h-8 rounded-full object-cover border border-white/10 shadow-sm shrink-0">
-                                <div class="flex flex-col ${isMine ? 'items-end' : 'items-start'}">
                                 <div class="relative shrink-0">
                                     <img src="${avatar}" class="w-8 h-8 rounded-full object-cover border border-white/10 shadow-sm">
                                     ${adminAvatarCrown}
@@ -4000,6 +4010,22 @@
             renderExamHistory();
             renderTodos();
             initDailyPerformance();
+            renderStreak(); // Streak yükle
+            initPomoStats(); // Pomodoro istatistiklerini yükle
+            renderChart(); // Grafiği çiz
+            initGamification(); // Oyunlaştırmayı yükle
+            initFlashcards(); // Hap bilgileri yükle
+            setupCollapsibles(); // Mobil için açılır/kapanır bölümleri ayarla
+            initTheme(); // Temayı yükle
+            showAnnouncementModal(); // Duyuru modalını göster
+            setInterval(updateLiveMotivation, 30000);
+            setInterval(updateCountdown, 1000); // Saniyede bir güncelle
+            if(db) initHomeAnnouncements(); // Ana ekran duyurularını başlat
+        }
+    </script>
+</body>
+
+</html>     initDailyPerformance();
             renderStreak(); // Streak yükle
             initPomoStats(); // Pomodoro istatistiklerini yükle
             renderChart(); // Grafiği çiz
