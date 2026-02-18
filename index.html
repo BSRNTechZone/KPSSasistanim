@@ -1881,7 +1881,8 @@
 
             if (auth && auth.currentUser) {
                 // Kullanıcı giriş yapmışsa Profil modunu göster
-                title.innerText = `Merhaba, ${auth.currentUser.displayName.split(' ')[0]}`;
+                const adminPrefix = isAdmin() ? '👑 ' : '';
+                title.innerText = `Merhaba, ${adminPrefix}${auth.currentUser.displayName ? auth.currentUser.displayName.split(' ')[0] : ''}`;
                 desc.innerText = "Hesabın şu an aktif. Çıkış yapmak mı istiyorsun?";
                 authOptions.classList.add('hidden');
                 profileOptions.classList.remove('hidden');
@@ -3146,6 +3147,10 @@
                 let listHtml = '';
                 snapshot.forEach(doc => {
                     const data = doc.data();
+                    
+                    // Adminleri sıralamadan gizle
+                    if (ADMIN_EMAILS.includes(data.email)) return;
+
                     const xp = data.gamificationData ? Math.round(data.gamificationData.xp) : 0;
                     const avatar = data.photoURL || `https://ui-avatars.com/api/?name=${data.displayName}&background=1e293b&color=fff&size=128`;
                     
