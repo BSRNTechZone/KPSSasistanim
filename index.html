@@ -3041,6 +3041,14 @@
             switchTab('home');
         }
 
+        // YENİ: Sohbet Kuralları Modalı
+        function openChatRulesModal() {
+            document.getElementById('chat-rules-modal').classList.remove('hidden');
+        }
+        function closeChatRulesModal() {
+            document.getElementById('chat-rules-modal').classList.add('hidden');
+        }
+
         function loadMessages() {
             const container = document.getElementById('chat-messages');
             // Son 50 mesajı tarihe göre sırala
