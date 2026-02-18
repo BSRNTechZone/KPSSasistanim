@@ -1507,7 +1507,22 @@
             "Kendine inan, bu puanı en çok sen hak ediyorsun.",
             "Yorgunluğun geçecek ama başarının gururu ömür boyu kalacak.",
             "Her işaretlediğin kutucuk, seni hayalindeki o koltuğa bir adım daha yaklaştırıyor.",
-            "Disiplin, neyi istediğinle şu an neyi istediğin arasındaki farktır."
+            "Disiplin, neyi istediğinle şu an neyi istediğin arasındaki farktır.",
+            "Bugün yapmadığın her test, yarın atama listesinde önündeki bir isme dönüşecek.",
+            "O listenin en başında adını gördüğünde, çektiğin tüm uykusuz gecelere değecek.",
+            "Acı geçicidir, ama başarı baki kalır.",
+            "Mazeretlerin, hayallerinin önüne geçiyorsa henüz yeterince istemiyorsun demektir.",
+            "Şu an çalıştığın her saat, ilerideki huzurlu emekliliğinin teminatıdır.",
+            "Damlaya damlaya atama olur!",
+            "Ter dökülmeyen başarı, sadece tesadüftür. Tesadüfler ise KPSS'de işe yaramaz.",
+            "Başkaları uyurken çalışanlar, başkaları hayal kurarken yaşarlar.",
+            "Zoru hemen yaparız, imkansız ise biraz zaman alır.",
+            "Zorluklar seni durdurmak için değil, ne kadar istediğini test etmek içindir.",
+            "Gelecekteki 'sen', bugünkü 'sana' teşekkür edene kadar devam et.",
+            "Kazanmak, her gün yeniden denemektir.",
+            "Yorgun olduğunda değil, işin bittiğinde dur.",
+            "Atanmak bir şans değil, disiplinli bir çalışmanın kaçınılmaz sonucudur.",
+            "Odaklan, çalış ve başar."
         ];
 
         const rawData = [
@@ -1749,14 +1764,19 @@
             auth.onAuthStateChanged(async (user) => {
                 const btnText = document.getElementById('login-btn-text');
                 if (user) {
+                    // Google fotoğrafı gibi profil değişikliklerinin yansıması için kullanıcı verisini yenile.
+                    await user.reload(); 
+                    // user.reload() sonrası en güncel bilgiyi auth.currentUser'dan almak daha güvenlidir.
+                    const freshUser = auth.currentUser;
+
                     // if(btnText) btnText.innerText = "Hesabım"; // Artık alt menüde
-                    localStorage.setItem('kpss_user_name', user.displayName);
+                    localStorage.setItem('kpss_user_name', freshUser.displayName);
                     
                     // Verileri Buluttan Çek
-                    await loadUserData(user);
+                    await loadUserData(freshUser);
 
                     // YENİ: BAN KONTROLÜ
-                    const userDoc = await db.collection('users').doc(user.uid).get();
+                    const userDoc = await db.collection('users').doc(freshUser.uid).get();
                     if (userDoc.exists && userDoc.data().isBanned === true) {
                         alert('Hesabınız bir yönetici tarafından askıya alınmıştır. Lütfen geliştirici ile iletişime geçin.');
                         await auth.signOut();
@@ -1767,13 +1787,13 @@
                     }
 
                     // YENİ: Admin Yetkisini Güncelle (İzin hatalarını önlemek için)
-                    await ensureAdminRole(user);
+                    await ensureAdminRole(freshUser);
 
                     // Hoş Geldin Ekranı (15 Dakika Kuralı)
                     const lastShown = localStorage.getItem('kpss_welcome_last_shown');
                     const now = Date.now();
                     if (!lastShown || (now - parseInt(lastShown)) > (15 * 60 * 1000)) {
-                        window.showWelcomeScreen(user);
+                        window.showWelcomeScreen(freshUser);
                         localStorage.setItem('kpss_welcome_last_shown', now);
                     }
                     
