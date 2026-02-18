@@ -1400,7 +1400,6 @@
             <span>Sıralama</span>
         </button>
         <button class="nav-item" onclick="switchTab('chat')">
-            <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
             <div class="relative">
                 <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
                 <span id="chat-badge" class="hidden absolute -top-1 -right-2 bg-red-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full border-2 border-[#0f172a] min-w-[18px] text-center shadow-sm animate-bounce">0</span>
@@ -3069,7 +3068,6 @@
                 return;
             }
             // document.getElementById('chat-modal').classList.remove('hidden');
-            loadMessages();
             // loadMessages(); // Artık initChatSystem ile global çalışıyor
             const container = document.getElementById('chat-messages');
             setTimeout(() => container.scrollTop = container.scrollHeight, 100);
@@ -3093,7 +3091,6 @@
             document.getElementById('chat-rules-modal').classList.add('hidden');
         }
 
-        function loadMessages() {
         function initChatSystem() {
             if (isChatInitialized) return;
             isChatInitialized = true;
