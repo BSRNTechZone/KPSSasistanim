@@ -292,6 +292,13 @@
         .chat-message:not(.mine) .chat-bubble { background: rgba(255,255,255,0.1); color: #e2e8f0; border-bottom-left-radius: 2px; }
         .chat-info { font-size: 9px; color: #64748b; margin-bottom: 4px; font-weight: bold; }
         .chat-message.mine .chat-info { text-align: right; }
+        /* YENİ: Admin ve Duyuru Stilleri */
+        .chat-message.announcement { flex-direction: column; align-items: center; margin: 20px 0; }
+        .chat-message.announcement .chat-bubble { background: linear-gradient(135deg, #b45309 0%, #f59e0b 100%); color: #0a0f1c; font-weight: 900; text-align: center; border-radius: 20px; max-width: 90%; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4); border: 2px solid #fff; font-size: 16px; text-transform: uppercase; letter-spacing: 1px; }
+        .chat-badge-admin { background: #ef4444; color: white; padding: 2px 6px; border-radius: 4px; font-size: 8px; font-weight: 900; margin-left: 4px; vertical-align: middle; box-shadow: 0 2px 5px rgba(239,68,68,0.4); }
+        .delete-msg-btn { opacity: 0.5; transition: all 0.2s; color: #ef4444; cursor: pointer; padding: 4px; font-size: 14px; margin-left: 5px; }
+        .delete-msg-btn:hover { opacity: 1; transform: scale(1.2); }
+        .chat-message:hover .delete-msg-btn { opacity: 1; }
 
         /* YENİ: Alt Menü ve Sayfa Yapısı */
         .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(12px); border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-around; padding: 10px 0 20px 0; z-index: 9000; box-shadow: 0 -10px 40px rgba(0,0,0,0.5); }
@@ -1247,6 +1254,9 @@
         <div class="bg-[#161e31] border border-blue-500/20 rounded-3xl w-full h-[80vh] shadow-2xl relative flex flex-col overflow-hidden">
             <div class="p-4 border-b border-white/5 bg-[#0a0f1c] flex justify-between items-center shrink-0">
                 <h3 class="text-lg font-black text-white uppercase tracking-tight flex items-center gap-2"><span class="text-blue-400 text-2xl">💬</span> KPSS Sohbet Odası</h3>
+                <div id="admin-controls" class="hidden flex gap-2">
+                    <button onclick="sendAnnouncement()" class="bg-amber-600 text-white px-3 py-1 rounded-lg text-[10px] font-bold uppercase hover:bg-amber-500 transition-colors">📢 Duyuru</button>
+                </div>
                 <button onclick="openChatRulesModal()" class="text-slate-500 hover:text-white transition-colors p-2" title="Topluluk Kuralları">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -3056,6 +3066,18 @@
             switchTab('home');
         }
 
+        // YENİ: Admin Ayarları
+        // BURAYA YÖNETİCİ E-POSTA ADRESLERİNİ YAZIN
+        const ADMIN_EMAILS = ["enfalbasaran@gmail.com", "admin@kpss.com", "fotomood7@gmail.com"]; 
+
+        function isAdmin() {
+            // Giriş yapılmamışsa veya e-posta yoksa false dön
+            if (!auth || !auth.currentUser || !auth.currentUser.email) {
+                return false;
+            }
+            return ADMIN_EMAILS.includes(auth.currentUser.email);
+        }
+
         // YENİ: Sohbet Fonksiyonları
         let chatUnsubscribe = null;
         let unreadChatCount = 0;
@@ -3071,6 +3093,13 @@
             // loadMessages(); // Artık initChatSystem ile global çalışıyor
             const container = document.getElementById('chat-messages');
             setTimeout(() => container.scrollTop = container.scrollHeight, 100);
+            
+            // Admin butonlarını göster/gizle
+            if (isAdmin()) {
+                document.getElementById('admin-controls').classList.remove('hidden');
+            } else {
+                document.getElementById('admin-controls').classList.add('hidden');
+            }
         }
 
         function closeChatModal() {
@@ -3115,16 +3144,34 @@
                     const isMine = msg.uid === auth.currentUser.uid;
                     const time = msg.createdAt ? new Date(msg.createdAt.toDate()).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : '...';
                     const avatar = msg.photoURL || `https://ui-avatars.com/api/?name=${msg.displayName}&background=random&color=fff&size=64`;
+                    
+                    // Admin Kontrolü (Mesajı atan kişi admin mi?)
+                    const isMsgFromAdmin = ADMIN_EMAILS.includes(msg.email);
+                    const adminBadge = isMsgFromAdmin ? '<span class="chat-badge-admin">YÖNETİCİ</span>' : '';
+                    
+                    // Silme Butonu (Giriş yapan kişi adminse veya kendi mesajıysa)
+                    const canDelete = isAdmin() || isMine; 
+                    const deleteBtn = canDelete ? `<span onclick="deleteMessage('${msg.id}')" class="delete-msg-btn" title="Sil">🗑️</span>` : '';
 
-                    container.innerHTML += `
-                        <div class="chat-message ${isMine ? 'mine' : ''}">
-                            <img src="${avatar}" class="w-8 h-8 rounded-full object-cover border border-white/10 shadow-sm shrink-0">
-                            <div class="flex flex-col ${isMine ? 'items-end' : 'items-start'} max-w-[80%]">
-                                <div class="chat-info">${msg.displayName} • ${time}</div>
-                                <div class="chat-bubble">${msg.text}</div>
+                    // Duyuru Mesajı mı?
+                    if (msg.type === 'announcement') {
+                        container.innerHTML += `
+                            <div class="chat-message announcement">
+                                <div class="chat-bubble">📢 ${msg.text}</div>
+                                <div class="chat-info mt-1 text-amber-500">YÖNETİCİ DUYURUSU • ${time} ${isAdmin() ? deleteBtn : ''}</div>
                             </div>
-                        </div>
-                    `;
+                        `;
+                    } else {
+                        container.innerHTML += `
+                            <div class="chat-message ${isMine ? 'mine' : ''}">
+                                <img src="${avatar}" class="w-8 h-8 rounded-full object-cover border border-white/10 shadow-sm shrink-0">
+                                <div class="flex flex-col ${isMine ? 'items-end' : 'items-start'} max-w-[80%]">
+                                    <div class="chat-info">${msg.displayName} ${adminBadge} • ${time} ${deleteBtn}</div>
+                                    <div class="chat-bubble">${msg.text}</div>
+                                </div>
+                            </div>
+                        `;
+                    }
                 });
 
                 // En alta kaydır
@@ -3173,14 +3220,47 @@
                 await db.collection('public_chat').add({
                     text: text,
                     uid: auth.currentUser.uid,
+                    email: auth.currentUser.email, // Admin kontrolü için email ekledik
                     displayName: auth.currentUser.displayName || 'İsimsiz',
                     photoURL: auth.currentUser.photoURL,
+                    type: 'text',
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
                 input.value = '';
             } catch (error) {
                 console.error("Mesaj gönderme hatası:", error);
                 alert("Mesaj gönderilemedi. Firebase kurallarını kontrol et (public_chat izni).");
+            }
+        }
+
+        // YENİ: Mesaj Silme
+        async function deleteMessage(msgId) {
+            if(!confirm("Bu mesajı silmek istediğine emin misin?")) return;
+            try {
+                await db.collection('public_chat').doc(msgId).delete();
+            } catch(e) { 
+                console.error(e);
+                alert("Silme işlemi başarısız. Yetkiniz olmayabilir."); 
+            }
+        }
+
+        // YENİ: Duyuru Gönderme
+        async function sendAnnouncement() {
+            const text = prompt("Duyuru mesajınızı yazın:");
+            if (!text) return;
+            
+            try {
+                await db.collection('public_chat').add({
+                    text: text,
+                    uid: auth.currentUser.uid,
+                    email: auth.currentUser.email,
+                    displayName: auth.currentUser.displayName || 'YÖNETİCİ',
+                    photoURL: auth.currentUser.photoURL,
+                    type: 'announcement', // Özel tip
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            } catch (error) {
+                alert("Duyuru gönderilemedi: " + error.message);
             }
         }
 
