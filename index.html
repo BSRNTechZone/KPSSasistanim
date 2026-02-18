@@ -1284,9 +1284,9 @@
                 
                 <div class="bg-slate-800/50 rounded-xl p-4 mb-2 border border-white/5">
                     <p class="text-slate-400 text-xs uppercase font-bold mb-2">Sıralama İsmi (Nick)</p>
-                    <div class="flex gap-2">
+                    <div class="flex gap-2 items-center">
                         <input type="text" id="custom-username-input" class="flex-1 bg-slate-900 border border-white/10 rounded-lg px-3 py-2 text-white text-sm font-bold outline-none focus:border-blue-500 transition-colors" placeholder="Ad Soyad">
-                        <button onclick="saveCustomUsername()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-bold text-xs uppercase transition-colors shadow-lg">Kaydet</button>
+                        <button onclick="saveCustomUsername()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-bold text-xs uppercase transition-colors shadow-lg shrink-0">Kaydet</button>
                     </div>
                 </div>
 
@@ -1330,6 +1330,22 @@
                 <div>
                     <h3 class="text-blue-400 font-bold text-sm uppercase mb-1">5. Ders Programı & Sertifika</h3>
                     <p class="text-slate-400 text-xs leading-relaxed">Haftalık ve günlük olarak yapılandırılmış çalışma planını takip et. %100'e ulaştığında ismine özel <strong>Başarı Sertifikası</strong> almaya hak kazanırsın.</p>
+                </div>
+                <div>
+                    <h3 class="text-amber-400 font-bold text-sm uppercase mb-1">6. Deneme Takibi</h3>
+                    <p class="text-slate-400 text-xs leading-relaxed">Deneme netlerini girerek tahmini puanını hesaplar. Sonuçlarını liste ve <strong>Grafik</strong> üzerinde analiz etmeni sağlar.</p>
+                </div>
+                <div>
+                    <h3 class="text-purple-400 font-bold text-sm uppercase mb-1">7. Günlük Performans & Soru Hedefi</h3>
+                    <p class="text-slate-400 text-xs leading-relaxed">Kendine günlük bir soru çözme hedefi (örn: 200 soru) koyarsın. Çözdükçe sisteme girersin. Hedefe ulaştığında sistem seni kutlar.</p>
+                </div>
+                <div>
+                    <h3 class="text-rose-400 font-bold text-sm uppercase mb-1">8. Zinciri Kırma (Streak) Mantığı</h3>
+                    <p class="text-slate-400 text-xs leading-relaxed">Bu özellik disiplinini ölçer. Eğer o günkü "Soru Hedefine" ulaşırsan, takvimdeki o gün yeşil olur. Amacın, hiç boş gün bırakmadan (zinciri koparmadan) her gün hedefini tutturmaktır.</p>
+                </div>
+                <div>
+                    <h3 class="text-pink-500 font-bold text-sm uppercase mb-1">9. Hap Bilgiler (Ezber Kartları)</h3>
+                    <p class="text-slate-400 text-xs leading-relaxed">Tarih, Coğrafya ve Vatandaşlık dersleri için pratik yapmanı sağlar. Karta tıkla, cevabı gör, "Sıradaki" diyerek yeni bilgiye geç.</p>
                 </div>
             </div>
 
@@ -3079,7 +3095,7 @@
                 input.value = '';
             } catch (error) {
                 console.error("Mesaj gönderme hatası:", error);
-                alert("Mesaj gönderilemedi. Lütfen internet bağlantını kontrol et.");
+                alert("Mesaj gönderilemedi. Firebase kurallarını kontrol et (public_chat izni).");
             }
         }
 
