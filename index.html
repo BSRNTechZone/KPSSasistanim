@@ -287,6 +287,7 @@
         .chat-message { display: flex; gap: 10px; margin-bottom: 12px; align-items: flex-end; animation: fadeIn 0.3s ease; }
         .chat-message.mine { flex-direction: row-reverse; }
         .chat-bubble { max-width: 85%; padding: 14px 18px; border-radius: 20px; font-size: 15px; line-height: 1.5; position: relative; word-wrap: break-word; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .chat-bubble { max-width: 85%; padding: 16px 24px; border-radius: 24px; font-size: 17px; line-height: 1.6; position: relative; word-wrap: break-word; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         .chat-message.mine .chat-bubble { background: var(--osym-accent); color: white; border-bottom-right-radius: 2px; }
         .chat-message:not(.mine) .chat-bubble { background: rgba(255,255,255,0.1); color: #e2e8f0; border-bottom-left-radius: 2px; }
         .chat-info { font-size: 9px; color: #64748b; margin-bottom: 4px; font-weight: bold; }
@@ -1400,6 +1401,10 @@
         </button>
         <button class="nav-item" onclick="switchTab('chat')">
             <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+            <div class="relative">
+                <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+                <span id="chat-badge" class="hidden absolute -top-1 -right-2 bg-red-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full border-2 border-[#0f172a] min-w-[18px] text-center shadow-sm animate-bounce">0</span>
+            </div>
             <span>Sohbet</span>
         </button>
         <button class="nav-item" onclick="switchTab('profile')">
@@ -1627,6 +1632,12 @@
             // Sayfa özel yüklemeleri
             if (tabId === 'leaderboard') openLeaderboardModal();
             if (tabId === 'chat') openChatModal();
+            
+            // Sohbet sekmesine geçildiyse bildirimi sıfırla
+            if (tabId === 'chat') {
+                unreadChatCount = 0;
+                updateChatBadge();
+            }
             if (tabId === 'profile') openAuthModal();
             
             // Sayfa başına kaydır
@@ -1672,6 +1683,9 @@
                         window.showWelcomeScreen(user);
                         localStorage.setItem('kpss_welcome_last_shown', now);
                     }
+                    
+                    // Sohbet sistemini başlat (Bildirimler için)
+                    initChatSystem();
                 } else {
                     // if(btnText) btnText.innerText = "Giriş Yap"; // Artık alt menüde
                 }
@@ -3045,6 +3059,8 @@
 
         // YENİ: Sohbet Fonksiyonları
         let chatUnsubscribe = null;
+        let unreadChatCount = 0;
+        let isChatInitialized = false;
 
         function openChatModal() {
             if (!auth || !auth.currentUser) {
@@ -3054,6 +3070,9 @@
             }
             // document.getElementById('chat-modal').classList.remove('hidden');
             loadMessages();
+            // loadMessages(); // Artık initChatSystem ile global çalışıyor
+            const container = document.getElementById('chat-messages');
+            setTimeout(() => container.scrollTop = container.scrollHeight, 100);
         }
 
         function closeChatModal() {
@@ -3062,6 +3081,7 @@
                 chatUnsubscribe(); // Dinlemeyi durdur (performans için)
                 chatUnsubscribe = null;
             }
+            // Global dinleyiciyi kapatmıyoruz
             switchTab('home');
         }
 
@@ -3074,6 +3094,10 @@
         }
 
         function loadMessages() {
+        function initChatSystem() {
+            if (isChatInitialized) return;
+            isChatInitialized = true;
+
             const container = document.getElementById('chat-messages');
             // Son 50 mesajı tarihe göre sırala
             const query = db.collection('public_chat').orderBy('createdAt', 'desc').limit(50);
@@ -3108,7 +3132,39 @@
 
                 // En alta kaydır
                 container.scrollTop = container.scrollHeight;
+                // Eğer sohbet sayfasındaysak en alta kaydır
+                if (document.getElementById('page-chat').classList.contains('active')) {
+                    container.scrollTop = container.scrollHeight;
+                }
+
+                // Bildirim Kontrolü
+                snapshot.docChanges().forEach(change => {
+                    if (change.type === 'added') {
+                        const msg = change.doc.data();
+                        const isChatActive = document.getElementById('page-chat').classList.contains('active');
+                        if (auth.currentUser && msg.uid !== auth.currentUser.uid && !isChatActive) {
+                            if (isChatReadyForNotifications) {
+                                unreadChatCount++;
+                                updateChatBadge();
+                            }
+                        }
+                    }
+                });
+                
+                isChatReadyForNotifications = true;
             });
+        }
+        
+        let isChatReadyForNotifications = false;
+
+        function updateChatBadge() {
+            const badge = document.getElementById('chat-badge');
+            if (unreadChatCount > 0) {
+                badge.innerText = unreadChatCount > 9 ? '9+' : unreadChatCount;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
         }
 
         async function sendMessage() {
