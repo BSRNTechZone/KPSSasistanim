@@ -286,7 +286,7 @@
         /* YENİ: Sohbet Stilleri */
         .chat-message { display: flex; gap: 10px; margin-bottom: 12px; align-items: flex-end; animation: fadeIn 0.3s ease; }
         .chat-message.mine { flex-direction: row-reverse; }
-        .chat-bubble { max-width: 92%; padding: 12px 18px; border-radius: 20px; font-size: 15px; line-height: 1.5; position: relative; word-wrap: break-word; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .chat-bubble { max-width: 100%; min-width: 40px; padding: 12px 16px; border-radius: 20px; font-size: 16px; line-height: 1.4; position: relative; word-wrap: break-word; overflow-wrap: break-word; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         .chat-message.mine .chat-bubble { background: var(--osym-accent); color: white; border-bottom-right-radius: 2px; }
         .chat-message:not(.mine) .chat-bubble { background: rgba(255,255,255,0.1); color: #e2e8f0; border-bottom-left-radius: 2px; }
         
@@ -1718,6 +1718,9 @@
                     // Verileri Buluttan Çek
                     await loadUserData(user);
 
+                    // YENİ: Admin Yetkisini Güncelle (İzin hatalarını önlemek için)
+                    await ensureAdminRole(user);
+
                     // Hoş Geldin Ekranı (15 Dakika Kuralı)
                     const lastShown = localStorage.getItem('kpss_welcome_last_shown');
                     const now = Date.now();
@@ -1778,6 +1781,20 @@
                     saveUserData();
                 }
             } catch (error) { console.error("Veri yükleme hatası:", error); }
+        }
+
+        // YENİ: Admin Yetkisini Veritabanına İşle
+        async function ensureAdminRole(user) {
+            if (ADMIN_EMAILS.includes(user.email)) {
+                try {
+                    await db.collection('users').doc(user.uid).set({
+                        isAdmin: true,
+                        email: user.email
+                    }, { merge: true });
+                } catch (e) {
+                    console.error("Admin rolü güncellenemedi:", e);
+                }
+            }
         }
 
         // Veri Kaydetme (Site -> Firestore)
@@ -3199,7 +3216,7 @@
                         container.innerHTML += `
                             <div class="chat-message ${isMine ? 'mine' : ''} ${isMsgFromAdmin ? 'admin' : ''}">
                                 <img src="${avatar}" class="w-8 h-8 rounded-full object-cover border border-white/10 shadow-sm shrink-0">
-                                <div class="flex flex-col ${isMine ? 'items-end' : 'items-start'} max-w-[80%]">
+                                <div class="flex flex-col ${isMine ? 'items-end' : 'items-start'} max-w-[90%]">
                                     <div class="chat-info">${displayName} ${adminBadge} • ${time} ${deleteBtn}</div>
                                     <div class="chat-bubble">${msg.text}</div>
                                 </div>
@@ -3340,7 +3357,7 @@
 
             } catch (error) {
                 console.error(error);
-                alert("Hata: " + error.message);
+                alert("Hata: " + error.message + "\n\nEğer 'Missing permissions' hatası alıyorsanız, Firebase Console > Firestore Database > Rules kısmından yazma izni vermeniz gerekebilir.");
             }
         }
 
